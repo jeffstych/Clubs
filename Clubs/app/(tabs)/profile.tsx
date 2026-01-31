@@ -5,8 +5,10 @@ import {
   Image,
   ScrollView,
   TouchableOpacity,
+  TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import { Link } from 'expo-router';
 
 export default function ProfilePage() {
   // TODO: Replace with actual user data from Supabase
@@ -70,11 +72,13 @@ export default function ProfilePage() {
           <Text style={styles.menuArrow}>›</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuIcon}>⚙️</Text>
-          <Text style={styles.menuText}>Settings</Text>
-          <Text style={styles.menuArrow}>›</Text>
-        </TouchableOpacity>
+        <Link href="/settings" asChild>
+          <TouchableOpacity style={styles.menuItem}>
+            <Text style={styles.menuIcon}>⚙️</Text>
+            <Text style={styles.menuText}>Settings</Text>
+            <Text style={styles.menuArrow}>›</Text>
+          </TouchableOpacity>
+        </Link>
 
         <TouchableOpacity style={styles.menuItem}>
           <Text style={styles.menuIcon}>🚪</Text>

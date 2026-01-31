@@ -9,7 +9,17 @@ export const unstable_settings = {
   anchor: '(tabs)',
 };
 
+import { ThemeProvider as AppThemeProvider } from '@/context/ThemeContext';
+
 export default function RootLayout() {
+  return (
+    <AppThemeProvider>
+      <RootLayoutNav />
+    </AppThemeProvider>
+  );
+}
+
+function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
   return (
