@@ -1,4 +1,5 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Pressable } from 'react-native';
+import { Link } from 'expo-router';
 import { Image } from 'expo-image';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -21,34 +22,38 @@ export function ClubCard({ club }: ClubCardProps) {
     const iconColor = useThemeColor({ light: '#3c823c', dark: '#fff' }, 'text');
 
     return (
-        <ThemedView style={[styles.card, { backgroundColor: cardBackgroundColor }]}>
-            <Image source={{ uri: club.image }} style={styles.image} contentFit="cover" transition={1000} />
-            <View style={styles.content}>
-                <View style={styles.header}>
-                    <ThemedText type="subtitle">{club.name}</ThemedText>
-                    <ThemedText style={styles.category}>{club.category}</ThemedText>
-                </View>
-                <ThemedText numberOfLines={2} style={styles.description}>
-                    {club.description}
-                </ThemedText>
-                {club.nextEvent && (
-                    <View style={[styles.eventStrip, { backgroundColor: eventBgColor }]}>
-                        <IconSymbol name="sparkles" size={14} color={iconColor} style={styles.eventIcon} />
-                        <ThemedText style={styles.eventText}>
-                            Next: {club.nextEvent.time} @ {club.nextEvent.location}
-                        </ThemedText>
-                    </View>
-                )}
-
-                <View style={styles.tagsContainer}>
-                    {club.tags.map((tag) => (
-                        <View key={tag} style={[styles.tag, { backgroundColor: tagBackgroundColor, borderColor: tagBorderColor, borderWidth: 1 }]}>
-                            <ThemedText style={styles.tagText}>#{tag}</ThemedText>
+        <Link href={`/clubs/${club.id}`} asChild>
+            <Pressable>
+                <ThemedView style={[styles.card, { backgroundColor: cardBackgroundColor }]}>
+                    <Image source={{ uri: club.image }} style={styles.image} contentFit="cover" transition={1000} />
+                    <View style={styles.content}>
+                        <View style={styles.header}>
+                            <ThemedText type="subtitle">{club.name}</ThemedText>
+                            <ThemedText style={styles.category}>{club.category}</ThemedText>
                         </View>
-                    ))}
-                </View>
-            </View>
-        </ThemedView>
+                        <ThemedText numberOfLines={2} style={styles.description}>
+                            {club.description}
+                        </ThemedText>
+                        {club.nextEvent && (
+                            <View style={[styles.eventStrip, { backgroundColor: eventBgColor }]}>
+                                <IconSymbol name="sparkles" size={14} color={iconColor} style={styles.eventIcon} />
+                                <ThemedText style={styles.eventText}>
+                                    Next: {club.nextEvent.time} @ {club.nextEvent.location}
+                                </ThemedText>
+                            </View>
+                        )}
+
+                        <View style={styles.tagsContainer}>
+                            {club.tags.map((tag) => (
+                                <View key={tag} style={[styles.tag, { backgroundColor: tagBackgroundColor, borderColor: tagBorderColor, borderWidth: 1 }]}>
+                                    <ThemedText style={styles.tagText}>#{tag}</ThemedText>
+                                </View>
+                            ))}
+                        </View>
+                    </View>
+                </ThemedView>
+            </Pressable>
+        </Link>
     );
 }
 
