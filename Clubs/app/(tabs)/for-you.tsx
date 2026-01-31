@@ -13,12 +13,14 @@ export default function ForYouScreen() {
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
-    const activeTagColor = useThemeColor({ light: '#0a7ea4', dark: '#fff' }, 'text');
+    const activeTagColor = useThemeColor({ light: '#fff', dark: '#fff' }, 'tint'); // White text on active
     const inactiveTagColor = useThemeColor({ light: '#687076', dark: '#9BA1A6' }, 'text');
-    const activeBgColor = useThemeColor({ light: '#d0eef7', dark: '#2f3d44' }, 'background');
-    const inactiveBgColor = useThemeColor({ light: '#f0f0f0', dark: '#2A2D2E' }, 'background');
-    const inputBgColor = useThemeColor({ light: '#f5f5f5', dark: '#2A2D2E' }, 'background');
-    const borderColor = useThemeColor({ light: '#e0e0e0', dark: '#3E4244' }, 'icon');
+
+    // Glass effect colors
+    const activeBgColor = useThemeColor({ light: '#0A3D0A', dark: '#4CAF50' }, 'tint');
+    const inactiveBgColor = useThemeColor({ light: 'rgba(10, 61, 10, 0.05)', dark: 'rgba(255, 255, 255, 0.1)' }, 'background');
+    const inputBgColor = useThemeColor({ light: 'rgba(10, 61, 10, 0.03)', dark: 'rgba(255, 255, 255, 0.05)' }, 'background');
+    const borderColor = useThemeColor({ light: 'rgba(10, 61, 10, 0.1)', dark: 'rgba(255, 255, 255, 0.2)' }, 'icon');
 
     // Extract all unique tags and categories from clubs
     const allTags = useMemo(() => {
@@ -239,7 +241,7 @@ const styles = StyleSheet.create({
         borderBottomColor: '#ccc',
     },
     dropdownItemSelected: {
-        backgroundColor: 'rgba(10, 126, 164, 0.1)',
+        backgroundColor: 'rgba(10, 61, 10, 0.1)', // Light forest green tint
     },
     subtitle: {
         marginTop: 8,
