@@ -13,14 +13,14 @@ export default function ForYouScreen() {
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
-    const activeTagColor = useThemeColor({ light: '#fff', dark: '#fff' }, 'tint'); // White text on active
+    const activeTagColor = useThemeColor({ light: '#fff', dark: '#062406' }, 'tint'); // Text on active tag
     const inactiveTagColor = useThemeColor({ light: '#687076', dark: '#9BA1A6' }, 'text');
 
     // Glass effect colors
-    const activeBgColor = useThemeColor({ light: '#0A3D0A', dark: '#4CAF50' }, 'tint');
-    const inactiveBgColor = useThemeColor({ light: 'rgba(10, 61, 10, 0.05)', dark: 'rgba(255, 255, 255, 0.1)' }, 'background');
-    const inputBgColor = useThemeColor({ light: 'rgba(10, 61, 10, 0.03)', dark: 'rgba(255, 255, 255, 0.05)' }, 'background');
-    const borderColor = useThemeColor({ light: 'rgba(10, 61, 10, 0.1)', dark: 'rgba(255, 255, 255, 0.2)' }, 'icon');
+    const activeBgColor = useThemeColor({ light: '#3c823c', dark: '#ffffff' }, 'tint');
+    const inactiveBgColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.05)', dark: 'rgba(255, 255, 255, 0.1)' }, 'background');
+    const inputBgColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.03)', dark: 'rgba(255, 255, 255, 0.05)' }, 'background');
+    const borderColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.1)', dark: 'rgba(255, 255, 255, 0.2)' }, 'icon');
 
     // Extract all unique tags and categories from clubs
     const allTags = useMemo(() => {
