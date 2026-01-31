@@ -21,6 +21,7 @@ export default function ForYouScreen() {
     const inactiveBgColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.05)', dark: 'rgba(255, 255, 255, 0.1)' }, 'background');
     const inputBgColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.03)', dark: 'rgba(255, 255, 255, 0.05)' }, 'background');
     const borderColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.1)', dark: 'rgba(255, 255, 255, 0.2)' }, 'icon');
+    const searchTextColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
 
     // Extract all unique tags and categories from clubs
     const allTags = useMemo(() => {
@@ -99,7 +100,7 @@ export default function ForYouScreen() {
                         <View style={[styles.searchContainer, { backgroundColor: inputBgColor }]}>
                             <IconSymbol name="magnifyingglass" size={20} color={inactiveTagColor} />
                             <TextInput
-                                style={[styles.searchInput, { color: activeTagColor }]}
+                                style={[styles.searchInput, { color: searchTextColor }]}
                                 placeholder="Search clubs..."
                                 placeholderTextColor={inactiveTagColor}
                                 value={searchQuery}
