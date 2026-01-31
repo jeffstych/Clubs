@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
         borderBottomColor: '#ccc',
     },
     dropdownItemSelected: {
-        backgroundColor: 'rgba(10, 61, 10, 0.1)', // Light forest green tint
+        backgroundColor: 'rgba(60, 130, 60, 0.1)', // Lighter green tint
     },
     subtitle: {
         marginTop: 8,
