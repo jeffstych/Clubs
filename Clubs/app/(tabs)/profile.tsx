@@ -5,7 +5,6 @@ import {
   Image,
   ScrollView,
   TouchableOpacity,
-  TouchableOpacity,
   StyleSheet,
 } from 'react-native';
 import { Link } from 'expo-router';
