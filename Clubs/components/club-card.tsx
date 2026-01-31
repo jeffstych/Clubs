@@ -4,14 +4,18 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Club } from '@/data/clubs';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 
 interface ClubCardProps {
     club: Club;
 }
 
 export function ClubCard({ club }: ClubCardProps) {
+
     const cardBackgroundColor = useThemeColor({ light: '#ffffff', dark: '#151718' }, 'background');
     const tagBackgroundColor = useThemeColor({ light: '#f0f0f0', dark: '#2A2D2E' }, 'background');
+    const eventBgColor = useThemeColor({ light: 'rgba(60, 130, 60, 0.1)', dark: 'rgba(255, 255, 255, 0.1)' }, 'background');
+    const iconColor = useThemeColor({ light: '#3c823c', dark: '#fff' }, 'text');
 
     return (
         <ThemedView style={[styles.card, { backgroundColor: cardBackgroundColor }]}>
@@ -31,6 +35,15 @@ export function ClubCard({ club }: ClubCardProps) {
                         </View>
                     ))}
                 </View>
+
+                {club.nextEvent && (
+                    <View style={[styles.eventStrip, { backgroundColor: eventBgColor }]}>
+                        <IconSymbol name="sparkles" size={14} color={iconColor} style={styles.eventIcon} />
+                        <ThemedText style={styles.eventText}>
+                            Next: {club.nextEvent.time} @ {club.nextEvent.location}
+                        </ThemedText>
+                    </View>
+                )}
             </View>
         </ThemedView>
     );
@@ -81,5 +94,20 @@ const styles = StyleSheet.create({
     },
     tagText: {
         fontSize: 10,
+    },
+    eventStrip: {
+        marginTop: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        borderRadius: 8,
+    },
+    eventIcon: {
+        marginRight: 6,
+    },
+    eventText: {
+        fontSize: 12,
+        fontWeight: '500',
     },
 });
