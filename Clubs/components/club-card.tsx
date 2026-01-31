@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     },
     header: {
         flexDirection: 'row',
-        justify কৃতিত্ব: 'space-between',
+        justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 8,
     },
