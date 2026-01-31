@@ -6,6 +6,10 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
+export const unstable_settings = {
+  anchor: '(tabs)',
+  initialRouteName: 'explore',
+};
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
@@ -17,10 +21,17 @@ export default function TabLayout() {
         tabBarButton: HapticTab,
       }}>
       <Tabs.Screen
-        name="for-you"
+        name="explore"
         options={{
-          title: 'For You',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="heart.fill" color={color} />,
+          title: 'Explore',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="compass.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="my-clubs"
+        options={{
+          title: 'My Clubs',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="list.bullet" color={color} />,
         }}
       />
       <Tabs.Screen
