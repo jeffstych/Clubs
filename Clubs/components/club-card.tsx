@@ -42,12 +42,20 @@ export function ClubCard({ club }: ClubCardProps) {
         if (eventAdded) {
             removeEvent(club.id);
         } else {
+            // Calculate next Tuesday for demo
+            const today = new Date();
+            const daysUntilTuesday = (2 - today.getDay() + 7) % 7 || 7;
+            const nextTuesday = new Date(today);
+            nextTuesday.setDate(today.getDate() + daysUntilTuesday);
+            const dateStr = nextTuesday.toISOString().split('T')[0];
+
             addEvent({
                 id: club.id,
                 clubId: club.id,
                 clubName: club.name,
                 time: club.nextEvent.time,
                 location: club.nextEvent.location,
+                date: dateStr,
             });
         }
     };

@@ -6,6 +6,7 @@ interface CalendarEvent {
     clubName: string;
     time: string;
     location: string;
+    date: string; // Format: YYYY-MM-DD
 }
 
 interface EventContextType {
