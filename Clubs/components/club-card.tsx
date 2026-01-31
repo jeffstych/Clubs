@@ -22,7 +22,7 @@ export function ClubCard({ club }: ClubCardProps) {
     const iconColor = useThemeColor({ light: '#3c823c', dark: '#fff' }, 'text');
 
     return (
-        <Link href={`/clubs/${club.id}`} asChild>
+        <Link href={`/clubs/${club.id}` as any} asChild>
             <Pressable>
                 <ThemedView style={[styles.card, { backgroundColor: cardBackgroundColor }]}>
                     <Image source={{ uri: club.image }} style={styles.image} contentFit="cover" transition={1000} />
