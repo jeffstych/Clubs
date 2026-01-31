@@ -9,6 +9,8 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 export default function CalendarScreen() {
     const { events } = useEvents();
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
+    const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+    const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
     const cardBg = useThemeColor({ light: '#ffffff', dark: '#151718' }, 'background');
     const iconColor = useThemeColor({ light: '#3c823c', dark: '#fff' }, 'tint');
@@ -18,12 +20,30 @@ export default function CalendarScreen() {
 
     // Get current month info
     const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
     const firstDay = new Date(currentYear, currentMonth, 1);
     const lastDay = new Date(currentYear, currentMonth + 1, 0);
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
+
+    const goToPreviousMonth = () => {
+        if (currentMonth === 0) {
+            setCurrentMonth(11);
+            setCurrentYear(currentYear - 1);
+        } else {
+            setCurrentMonth(currentMonth - 1);
+        }
+        setSelectedDate(null);
+    };
+
+    const goToNextMonth = () => {
+        if (currentMonth === 11) {
+            setCurrentMonth(0);
+            setCurrentYear(currentYear + 1);
+        } else {
+            setCurrentMonth(currentMonth + 1);
+        }
+        setSelectedDate(null);
+    };
 
     // Create calendar grid
     const calendarDays: (number | null)[] = [];
@@ -58,9 +78,16 @@ export default function CalendarScreen() {
             <ScrollView contentContainerStyle={styles.content}>
                 <ThemedText type="title" style={styles.title}>Calendar</ThemedText>
 
+
                 {/* Month Header */}
                 <View style={[styles.monthHeader, { backgroundColor: cardBg }]}>
+                    <TouchableOpacity onPress={goToPreviousMonth} style={styles.navButton}>
+                        <IconSymbol name="chevron.left" size={20} color={iconColor} />
+                    </TouchableOpacity>
                     <ThemedText type="subtitle">{monthNames[currentMonth]} {currentYear}</ThemedText>
+                    <TouchableOpacity onPress={goToNextMonth} style={styles.navButton}>
+                        <IconSymbol name="chevron.right" size={20} color={iconColor} />
+                    </TouchableOpacity>
                 </View>
 
                 {/* Day Labels */}
@@ -159,10 +186,15 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     monthHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         padding: 12,
         borderRadius: 8,
         marginBottom: 16,
-        alignItems: 'center',
+    },
+    navButton: {
+        padding: 8,
     },
     dayLabels: {
         flexDirection: 'row',
