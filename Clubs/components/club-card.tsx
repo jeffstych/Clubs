@@ -1,4 +1,5 @@
-import { StyleSheet, View, Pressable } from 'react-native';
+import { StyleSheet, View, Pressable, TouchableOpacity } from 'react-native';
+import { useState } from 'react';
 import { Link } from 'expo-router';
 import { Image } from 'expo-image';
 import { ThemedText } from '@/components/themed-text';
@@ -6,12 +7,16 @@ import { ThemedView } from '@/components/themed-view';
 import { Club } from '@/data/clubs';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useEvents } from '@/context/EventContext';
 
 interface ClubCardProps {
     club: Club;
 }
 
 export function ClubCard({ club }: ClubCardProps) {
+    const [isFollowing, setIsFollowing] = useState(false);
+    const { addEvent, removeEvent, isEventAdded } = useEvents();
+    const eventAdded = club.nextEvent ? isEventAdded(club.id) : false;
 
     const cardBackgroundColor = useThemeColor({ light: '#ffffff', dark: '#151718' }, 'background');
     // Translucent bubble effect for tags
@@ -20,6 +25,40 @@ export function ClubCard({ club }: ClubCardProps) {
 
     const eventBgColor = useThemeColor({ light: 'rgba(60, 130, 60, 0.1)', dark: 'rgba(255, 255, 255, 0.1)' }, 'background');
     const iconColor = useThemeColor({ light: '#3c823c', dark: '#fff' }, 'text');
+    const followBtnBg = useThemeColor({ light: '#3c823c', dark: '#fff' }, 'tint');
+    const followBtnText = useThemeColor({ light: '#fff', dark: '#062406' }, 'background');
+
+    const handleFollowPress = (e: any) => {
+        e.stopPropagation();
+        e.preventDefault();
+        setIsFollowing(!isFollowing);
+    };
+
+    const handleAddEvent = (e: any) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (!club.nextEvent) return;
+
+        if (eventAdded) {
+            removeEvent(club.id);
+        } else {
+            // Calculate next Tuesday for demo
+            const today = new Date();
+            const daysUntilTuesday = (2 - today.getDay() + 7) % 7 || 7;
+            const nextTuesday = new Date(today);
+            nextTuesday.setDate(today.getDate() + daysUntilTuesday);
+            const dateStr = nextTuesday.toISOString().split('T')[0];
+
+            addEvent({
+                id: club.id,
+                clubId: club.id,
+                clubName: club.name,
+                time: club.nextEvent.time,
+                location: club.nextEvent.location,
+                date: dateStr,
+            });
+        }
+    };
 
     return (
         <Link href={`/clubs/${club.id}` as any} asChild>
@@ -29,8 +68,16 @@ export function ClubCard({ club }: ClubCardProps) {
                     <View style={styles.content}>
                         <View style={styles.header}>
                             <ThemedText type="subtitle">{club.name}</ThemedText>
-                            <ThemedText style={styles.category}>{club.category}</ThemedText>
+                            <TouchableOpacity
+                                style={[styles.followButton, { backgroundColor: isFollowing ? 'transparent' : followBtnBg, borderColor: followBtnBg, borderWidth: 1 }]}
+                                onPress={handleFollowPress}
+                            >
+                                <ThemedText style={[styles.followButtonText, { color: isFollowing ? followBtnBg : followBtnText }]}>
+                                    {isFollowing ? 'Following' : 'Follow'}
+                                </ThemedText>
+                            </TouchableOpacity>
                         </View>
+                        <ThemedText style={styles.category}>{club.category}</ThemedText>
                         <ThemedText numberOfLines={2} style={styles.description}>
                             {club.description}
                         </ThemedText>
@@ -40,6 +87,16 @@ export function ClubCard({ club }: ClubCardProps) {
                                 <ThemedText style={styles.eventText}>
                                     Next: {club.nextEvent.time} @ {club.nextEvent.location}
                                 </ThemedText>
+                                <TouchableOpacity
+                                    style={[styles.addEventButton, { backgroundColor: eventAdded ? iconColor : 'transparent', borderColor: iconColor, borderWidth: 1 }]}
+                                    onPress={handleAddEvent}
+                                >
+                                    <IconSymbol
+                                        name={eventAdded ? "checkmark" : "plus"}
+                                        size={12}
+                                        color={eventAdded ? '#fff' : iconColor}
+                                    />
+                                </TouchableOpacity>
                             </View>
                         )}
 
@@ -78,12 +135,22 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 8,
+        alignItems: 'flex-start',
+        marginBottom: 4,
+    },
+    followButton: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+    },
+    followButtonText: {
+        fontSize: 12,
+        fontWeight: '600',
     },
     category: {
         fontSize: 12,
         opacity: 0.7,
+        marginBottom: 8,
     },
     description: {
         marginBottom: 12,
@@ -111,6 +178,14 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         paddingHorizontal: 10,
         borderRadius: 8,
+    },
+    addEventButton: {
+        marginLeft: 'auto',
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     eventIcon: {
         marginRight: 6,

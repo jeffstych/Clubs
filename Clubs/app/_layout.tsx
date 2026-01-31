@@ -9,7 +9,20 @@ export const unstable_settings = {
   anchor: '(tabs)',
 };
 
+import { ThemeProvider as AppThemeProvider } from '@/context/ThemeContext';
+import { EventProvider } from '@/context/EventContext';
+
 export default function RootLayout() {
+  return (
+    <AppThemeProvider>
+      <EventProvider>
+        <RootLayoutNav />
+      </EventProvider>
+    </AppThemeProvider>
+  );
+}
+
+function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
   return (
