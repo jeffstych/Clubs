@@ -13,7 +13,10 @@ interface ClubCardProps {
 export function ClubCard({ club }: ClubCardProps) {
 
     const cardBackgroundColor = useThemeColor({ light: '#ffffff', dark: '#151718' }, 'background');
-    const tagBackgroundColor = useThemeColor({ light: '#f0f0f0', dark: '#2A2D2E' }, 'background');
+    // Translucent bubble effect for tags
+    const tagBackgroundColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.08)', dark: 'rgba(255, 255, 255, 0.1)' }, 'background');
+    const tagBorderColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.15)', dark: 'rgba(255, 255, 255, 0.2)' }, 'icon');
+
     const eventBgColor = useThemeColor({ light: 'rgba(60, 130, 60, 0.1)', dark: 'rgba(255, 255, 255, 0.1)' }, 'background');
     const iconColor = useThemeColor({ light: '#3c823c', dark: '#fff' }, 'text');
 
@@ -28,14 +31,6 @@ export function ClubCard({ club }: ClubCardProps) {
                 <ThemedText numberOfLines={2} style={styles.description}>
                     {club.description}
                 </ThemedText>
-                <View style={styles.tagsContainer}>
-                    {club.tags.map((tag) => (
-                        <View key={tag} style={[styles.tag, { backgroundColor: tagBackgroundColor }]}>
-                            <ThemedText style={styles.tagText}>{tag}</ThemedText>
-                        </View>
-                    ))}
-                </View>
-
                 {club.nextEvent && (
                     <View style={[styles.eventStrip, { backgroundColor: eventBgColor }]}>
                         <IconSymbol name="sparkles" size={14} color={iconColor} style={styles.eventIcon} />
@@ -44,6 +39,14 @@ export function ClubCard({ club }: ClubCardProps) {
                         </ThemedText>
                     </View>
                 )}
+
+                <View style={styles.tagsContainer}>
+                    {club.tags.map((tag) => (
+                        <View key={tag} style={[styles.tag, { backgroundColor: tagBackgroundColor, borderColor: tagBorderColor, borderWidth: 1 }]}>
+                            <ThemedText style={styles.tagText}>#{tag}</ThemedText>
+                        </View>
+                    ))}
+                </View>
             </View>
         </ThemedView>
     );
@@ -83,20 +86,21 @@ const styles = StyleSheet.create({
         opacity: 0.8,
     },
     tagsContainer: {
+        marginTop: 12,
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: 8,
     },
     tag: {
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 4,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 12,
     },
     tagText: {
-        fontSize: 10,
+        fontSize: 11,
+        fontWeight: '500',
     },
     eventStrip: {
-        marginTop: 12,
         flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: 6,
