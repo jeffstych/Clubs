@@ -1,30 +1,58 @@
 import { useState, useMemo } from 'react';
-import { StyleSheet, ScrollView, TouchableOpacity, FlatList, View } from 'react-native';
+import { StyleSheet, ScrollView, TouchableOpacity, FlatList, View, TextInput, Pressable } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { ClubCard } from '@/components/club-card';
 import { CLUBS, Club } from '@/data/clubs';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 
 export default function ForYouScreen() {
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+
     const activeTagColor = useThemeColor({ light: '#0a7ea4', dark: '#fff' }, 'text');
     const inactiveTagColor = useThemeColor({ light: '#687076', dark: '#9BA1A6' }, 'text');
     const activeBgColor = useThemeColor({ light: '#d0eef7', dark: '#2f3d44' }, 'background');
     const inactiveBgColor = useThemeColor({ light: '#f0f0f0', dark: '#2A2D2E' }, 'background');
+    const inputBgColor = useThemeColor({ light: '#f5f5f5', dark: '#2A2D2E' }, 'background');
+    const borderColor = useThemeColor({ light: '#e0e0e0', dark: '#3E4244' }, 'icon');
 
-    // Extract all unique tags from clubs
+    // Extract all unique tags and categories from clubs
     const allTags = useMemo(() => {
         const tags = new Set<string>();
         CLUBS.forEach((club) => club.tags.forEach((tag) => tags.add(tag)));
         return Array.from(tags).sort();
     }, []);
 
-    // AI Sorting Logic
-    const sortedClubs = useMemo(() => {
-        if (selectedTags.length === 0) return CLUBS;
+    const allCategories = useMemo(() => {
+        const categories = new Set<string>(CLUBS.map(c => c.category));
+        return Array.from(categories).sort();
+    }, []);
 
-        return [...CLUBS].map((club) => {
+    // Sorting and Filtering Logic
+    const sortedClubs = useMemo(() => {
+        let filtered = CLUBS;
+
+        // Filter by Search Query
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase();
+            filtered = filtered.filter(club =>
+                club.name.toLowerCase().includes(query) ||
+                club.description.toLowerCase().includes(query)
+            );
+        }
+
+        // Filter by Category
+        if (selectedCategory) {
+            filtered = filtered.filter(club => club.category === selectedCategory);
+        }
+
+        if (selectedTags.length === 0) return filtered;
+
+        return [...filtered].map((club) => {
             // Calculate a relevance score
             let score = 0;
             club.tags.forEach((tag) => {
@@ -41,7 +69,7 @@ export default function ForYouScreen() {
             // Fallback to name
             return a.name.localeCompare(b.name);
         });
-    }, [selectedTags]);
+    }, [selectedTags, searchQuery, selectedCategory]);
 
     const toggleTag = (tag: string) => {
         setSelectedTags((prev) =>
@@ -64,6 +92,65 @@ export default function ForYouScreen() {
                                 Select your interests to get personalized club recommendations.
                             </ThemedText>
                         </ThemedView>
+
+                        {/* Search Bar */}
+                        <View style={[styles.searchContainer, { backgroundColor: inputBgColor }]}>
+                            <IconSymbol name="magnifyingglass" size={20} color={inactiveTagColor} />
+                            <TextInput
+                                style={[styles.searchInput, { color: activeTagColor }]}
+                                placeholder="Search clubs..."
+                                placeholderTextColor={inactiveTagColor}
+                                value={searchQuery}
+                                onChangeText={setSearchQuery}
+                            />
+                        </View>
+
+                        {/* Category Dropdown */}
+                        <View style={styles.controlsSection}>
+                            <Pressable
+                                style={[
+                                    styles.dropdownButton,
+                                    { borderColor: borderColor, backgroundColor: inputBgColor }
+                                ]}
+                                onPress={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                            >
+                                <ThemedText style={styles.dropdownButtonText}>
+                                    {selectedCategory ? selectedCategory : "All Categories"}
+                                </ThemedText>
+                                <IconSymbol
+                                    name="chevron.down"
+                                    size={16}
+                                    color={inactiveTagColor}
+                                    style={{ transform: [{ rotate: showCategoryDropdown ? '180deg' : '0deg' }] }}
+                                />
+                            </Pressable>
+
+                            {showCategoryDropdown && (
+                                <View style={[styles.dropdownMenu, { backgroundColor: inputBgColor, borderColor }]}>
+                                    <Pressable
+                                        style={[styles.dropdownItem, !selectedCategory && styles.dropdownItemSelected]}
+                                        onPress={() => {
+                                            setSelectedCategory(null);
+                                            setShowCategoryDropdown(false);
+                                        }}
+                                    >
+                                        <ThemedText>All Categories</ThemedText>
+                                    </Pressable>
+                                    {allCategories.map(cat => (
+                                        <Pressable
+                                            key={cat}
+                                            style={[styles.dropdownItem, selectedCategory === cat && styles.dropdownItemSelected]}
+                                            onPress={() => {
+                                                setSelectedCategory(cat);
+                                                setShowCategoryDropdown(false);
+                                            }}
+                                        >
+                                            <ThemedText>{cat}</ThemedText>
+                                        </Pressable>
+                                    ))}
+                                </View>
+                            )}
+                        </View>
 
                         <View style={styles.tagsSection}>
                             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tagsScroll}>
@@ -108,7 +195,51 @@ const styles = StyleSheet.create({
         paddingTop: 60, // Add padding for status bar / header
     },
     header: {
+        marginBottom: 16,
+    },
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        borderRadius: 12,
+        marginBottom: 16,
+    },
+    searchInput: {
+        flex: 1,
+        marginLeft: 8,
+        fontSize: 16,
+    },
+    controlsSection: {
         marginBottom: 20,
+        zIndex: 10, // Ensure dropdown flows over other elements if absolute (but we are using stacking flow)
+    },
+    dropdownButton: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 12,
+        borderRadius: 12,
+        borderWidth: 1,
+    },
+    dropdownButtonText: {
+        fontSize: 15,
+        fontWeight: '500',
+    },
+    dropdownMenu: {
+        marginTop: 8,
+        borderRadius: 12,
+        borderWidth: 1,
+        overflow: 'hidden',
+    },
+    dropdownItem: {
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: '#ccc',
+    },
+    dropdownItemSelected: {
+        backgroundColor: 'rgba(10, 126, 164, 0.1)',
     },
     subtitle: {
         marginTop: 8,
