@@ -5,6 +5,10 @@ export interface Club {
   category: string;
   tags: string[];
   image: string;
+  nextEvent?: {
+    time: string;
+    location: string;
+  };
 }
 
 export const CLUBS: Club[] = [
@@ -15,6 +19,7 @@ export const CLUBS: Club[] = [
     category: 'Technology',
     tags: ['coding', 'engineering', 'hardware', 'tech'],
     image: 'https://images.unsplash.com/photo-1561557944-6e7860d5a6ea?q=80&w=300&auto=format&fit=crop',
+    nextEvent: { time: 'Tue 6-8 PM', location: 'Engineering Bldg 1220' },
   },
   {
     id: '2',
@@ -23,6 +28,7 @@ export const CLUBS: Club[] = [
     category: 'Academic',
     tags: ['speaking', 'politics', 'social', 'academic'],
     image: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=300&auto=format&fit=crop',
+    nextEvent: { time: 'Wed 7-9 PM', location: 'Wells Hall B115' },
   },
   {
     id: '3',
@@ -31,6 +37,7 @@ export const CLUBS: Club[] = [
     category: 'Arts',
     tags: ['creative', 'art', 'social', 'outdoor'],
     image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=300&auto=format&fit=crop',
+    nextEvent: { time: 'Sun 2-4 PM', location: 'Kresge Art Center 108' },
   },
   {
     id: '4',
@@ -39,6 +46,7 @@ export const CLUBS: Club[] = [
     category: 'Sports',
     tags: ['sports', 'fitness', 'team', 'outdoor'],
     image: 'https://images.unsplash.com/photo-1579952363873-27f3bade8f55?q=80&w=300&auto=format&fit=crop',
+    nextEvent: { time: 'Mon 5-7 PM', location: 'IM Sports West Field 1' },
   },
   {
     id: '5',
@@ -47,6 +55,7 @@ export const CLUBS: Club[] = [
     category: 'Lifestyle',
     tags: ['food', 'creative', 'social', 'indoor'],
     image: 'https://images.unsplash.com/photo-1556910103-1c02745a30bf?q=80&w=300&auto=format&fit=crop',
+    nextEvent: { time: 'Thu 6-8 PM', location: 'Demonstration Hall Kitchen' },
   },
   {
     id: '6',
@@ -55,6 +64,7 @@ export const CLUBS: Club[] = [
     category: 'Game',
     tags: ['strategy', 'game', 'intellectual', 'indoor'],
     image: 'https://images.unsplash.com/photo-1529699211952-734e80c4d42b?q=80&w=300&auto=format&fit=crop',
+    nextEvent: { time: 'Fri 7-10 PM', location: 'MSU Union 3rd Floor' },
   },
   {
     id: '7',
@@ -63,6 +73,7 @@ export const CLUBS: Club[] = [
     category: 'Volunteering',
     tags: ['nature', 'volunteering', 'outdoor', 'social'],
     image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb77c35d?q=80&w=300&auto=format&fit=crop',
+    nextEvent: { time: 'Sat 10 AM-2 PM', location: 'Red Cedar River Bank' },
   },
   {
     id: '8',
@@ -71,5 +82,6 @@ export const CLUBS: Club[] = [
     category: 'Music',
     tags: ['music', 'art', 'performance', 'creative'],
     image: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?q=80&w=300&auto=format&fit=crop',
+    nextEvent: { time: 'Wed 8-10 PM', location: 'Music Building 103' },
   },
 ];
