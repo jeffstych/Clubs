@@ -10,11 +10,14 @@ export const unstable_settings = {
 };
 
 import { ThemeProvider as AppThemeProvider } from '@/context/ThemeContext';
+import { EventProvider } from '@/context/EventContext';
 
 export default function RootLayout() {
   return (
     <AppThemeProvider>
-      <RootLayoutNav />
+      <EventProvider>
+        <RootLayoutNav />
+      </EventProvider>
     </AppThemeProvider>
   );
 }

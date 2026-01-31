@@ -7,6 +7,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Club } from '@/data/clubs';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useEvents } from '@/context/EventContext';
 
 interface ClubCardProps {
     club: Club;
@@ -14,6 +15,8 @@ interface ClubCardProps {
 
 export function ClubCard({ club }: ClubCardProps) {
     const [isFollowing, setIsFollowing] = useState(false);
+    const { addEvent, removeEvent, isEventAdded } = useEvents();
+    const eventAdded = club.nextEvent ? isEventAdded(club.id) : false;
 
     const cardBackgroundColor = useThemeColor({ light: '#ffffff', dark: '#151718' }, 'background');
     // Translucent bubble effect for tags
@@ -29,6 +32,24 @@ export function ClubCard({ club }: ClubCardProps) {
         e.stopPropagation();
         e.preventDefault();
         setIsFollowing(!isFollowing);
+    };
+
+    const handleAddEvent = (e: any) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (!club.nextEvent) return;
+
+        if (eventAdded) {
+            removeEvent(club.id);
+        } else {
+            addEvent({
+                id: club.id,
+                clubId: club.id,
+                clubName: club.name,
+                time: club.nextEvent.time,
+                location: club.nextEvent.location,
+            });
+        }
     };
 
     return (
@@ -58,6 +79,16 @@ export function ClubCard({ club }: ClubCardProps) {
                                 <ThemedText style={styles.eventText}>
                                     Next: {club.nextEvent.time} @ {club.nextEvent.location}
                                 </ThemedText>
+                                <TouchableOpacity
+                                    style={[styles.addEventButton, { backgroundColor: eventAdded ? iconColor : 'transparent', borderColor: iconColor, borderWidth: 1 }]}
+                                    onPress={handleAddEvent}
+                                >
+                                    <IconSymbol
+                                        name={eventAdded ? "checkmark" : "plus"}
+                                        size={12}
+                                        color={eventAdded ? '#fff' : iconColor}
+                                    />
+                                </TouchableOpacity>
                             </View>
                         )}
 
@@ -139,6 +170,14 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         paddingHorizontal: 10,
         borderRadius: 8,
+    },
+    addEventButton: {
+        marginLeft: 'auto',
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     eventIcon: {
         marginRight: 6,
