@@ -1,4 +1,5 @@
-import { StyleSheet, View, Pressable } from 'react-native';
+import { StyleSheet, View, Pressable, TouchableOpacity } from 'react-native';
+import { useState } from 'react';
 import { Link } from 'expo-router';
 import { Image } from 'expo-image';
 import { ThemedText } from '@/components/themed-text';
@@ -12,6 +13,7 @@ interface ClubCardProps {
 }
 
 export function ClubCard({ club }: ClubCardProps) {
+    const [isFollowing, setIsFollowing] = useState(false);
 
     const cardBackgroundColor = useThemeColor({ light: '#ffffff', dark: '#151718' }, 'background');
     // Translucent bubble effect for tags
@@ -20,6 +22,14 @@ export function ClubCard({ club }: ClubCardProps) {
 
     const eventBgColor = useThemeColor({ light: 'rgba(60, 130, 60, 0.1)', dark: 'rgba(255, 255, 255, 0.1)' }, 'background');
     const iconColor = useThemeColor({ light: '#3c823c', dark: '#fff' }, 'text');
+    const followBtnBg = useThemeColor({ light: '#3c823c', dark: '#fff' }, 'tint');
+    const followBtnText = useThemeColor({ light: '#fff', dark: '#062406' }, 'background');
+
+    const handleFollowPress = (e: any) => {
+        e.stopPropagation();
+        e.preventDefault();
+        setIsFollowing(!isFollowing);
+    };
 
     return (
         <Link href={`/clubs/${club.id}` as any} asChild>
@@ -29,8 +39,16 @@ export function ClubCard({ club }: ClubCardProps) {
                     <View style={styles.content}>
                         <View style={styles.header}>
                             <ThemedText type="subtitle">{club.name}</ThemedText>
-                            <ThemedText style={styles.category}>{club.category}</ThemedText>
+                            <TouchableOpacity
+                                style={[styles.followButton, { backgroundColor: isFollowing ? 'transparent' : followBtnBg, borderColor: followBtnBg, borderWidth: 1 }]}
+                                onPress={handleFollowPress}
+                            >
+                                <ThemedText style={[styles.followButtonText, { color: isFollowing ? followBtnBg : followBtnText }]}>
+                                    {isFollowing ? 'Following' : 'Follow'}
+                                </ThemedText>
+                            </TouchableOpacity>
                         </View>
+                        <ThemedText style={styles.category}>{club.category}</ThemedText>
                         <ThemedText numberOfLines={2} style={styles.description}>
                             {club.description}
                         </ThemedText>
@@ -78,12 +96,22 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 8,
+        alignItems: 'flex-start',
+        marginBottom: 4,
+    },
+    followButton: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+    },
+    followButtonText: {
+        fontSize: 12,
+        fontWeight: '600',
     },
     category: {
         fontSize: 12,
         opacity: 0.7,
+        marginBottom: 8,
     },
     description: {
         marginBottom: 12,
