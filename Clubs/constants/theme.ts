@@ -5,21 +5,21 @@
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+const tintColorLight = '#3c823c'; // Lighter Green for Light Mode Accents
+const tintColorDark = '#ffffff'; // White for Dark Mode Accents
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
+    text: '#062406', // Dark Green for text in light mode
+    background: '#ffffff', // White background
     tint: tintColorLight,
     icon: '#687076',
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
+    text: '#ffffff', // White text
+    background: '#062406', // Dark Green background
     tint: tintColorDark,
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
