@@ -331,32 +331,6 @@ export default function ExploreScreen() {
               </ScrollView>
             </View>
 
-            {/* Tags Section */}
-            <View style={styles.tagsSection}>
-              <ThemedText type="defaultSemiBold" style={styles.filterLabel}>Tags</ThemedText>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tagsScroll}>
-                {allTags.map((tag) => {
-                  const isActive = selectedTags.includes(tag);
-                  return (
-                    <TouchableOpacity
-                      key={tag}
-                      style={[
-                        styles.tag,
-                        { backgroundColor: isActive ? activeBgColor : inactiveBgColor },
-                      ]}
-                      onPress={() => toggleTag(tag)}>
-                      <ThemedText
-                        style={[
-                          styles.tagText,
-                          { color: isActive ? activeTagColor : inactiveTagColor, fontWeight: isActive ? '600' : '400' },
-                        ]}>
-                        {tag}
-                      </ThemedText>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            </View>
             <ThemedText type="subtitle" style={styles.sectionTitle}>
               {(selectedTags.length > 0 || selectedCategories.length > 0)
                 ? "Filtered Clubs" 
@@ -458,22 +432,9 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textTransform: 'capitalize',
   },
-  tagsSection: {
-    marginBottom: 24,
-  },
   tagsScroll: {
     gap: 8,
     paddingRight: 16,
-  },
-  tag: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 8,
-  },
-  tagText: {
-    fontSize: 14,
-    textTransform: 'capitalize',
   },
   sectionTitle: {
     marginBottom: 12,
