@@ -23,7 +23,7 @@ export default function CalendarScreen() {
             setLoading(false);
             return;
         }
-        
+
         try {
             setLoading(true);
             const { data: userEvents } = await getUserSignedUpEvents(session.user.id);
@@ -127,7 +127,7 @@ export default function CalendarScreen() {
         <ThemedView style={styles.container}>
             <ScrollView contentContainerStyle={styles.content}>
                 <ThemedText type="title" style={styles.title}>My Calendar</ThemedText>
-                
+
                 {loading ? (
                     <ThemedText style={styles.loadingText}>Loading your events...</ThemedText>
                 ) : !session ? (
@@ -136,102 +136,107 @@ export default function CalendarScreen() {
                     <>
 
 
-                {/* Month Header */}
-                <View style={[styles.monthHeader, { backgroundColor: cardBg }]}>
-                    <TouchableOpacity onPress={goToPreviousMonth} style={styles.navButton}>
-                        <IconSymbol name="chevron.left" size={20} color={iconColor} />
-                    </TouchableOpacity>
-                    <ThemedText type="subtitle">{monthNames[currentMonth]} {currentYear}</ThemedText>
-                    <TouchableOpacity onPress={goToNextMonth} style={styles.navButton}>
-                        <IconSymbol name="chevron.right" size={20} color={iconColor} />
-                    </TouchableOpacity>
-                </View>
-
-                {/* Day Labels */}
-                <View style={styles.dayLabels}>
-                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                        <View key={day} style={styles.dayLabel}>
-                            <ThemedText style={styles.dayLabelText}>{day}</ThemedText>
-                        </View>
-                    ))}
-                </View>
-
-                {/* Calendar Grid */}
-                <View style={styles.calendarGrid}>
-                    {calendarDays.map((day, index) => {
-                        if (day === null) {
-                            return <View key={`empty-${index}`} style={styles.dayCell} />;
-                        }
-
-                        const dateStr = formatDate(currentYear, currentMonth, day);
-                        const isSelected = selectedDate === dateStr;
-                        const isToday = day === now.getDate() && currentMonth === now.getMonth();
-                        const hasDot = hasEvents(day);
-
-                        return (
-                            <TouchableOpacity
-                                key={day}
-                                style={[
-                                    styles.dayCell,
-                                    isSelected && { backgroundColor: selectedBg },
-                                    isToday && !isSelected && { borderColor: iconColor, borderWidth: 1 },
-                                    hasDot && !isSelected && { borderColor: '#fff', borderWidth: 1 }
-                                ]}
-                                onPress={() => setSelectedDate(dateStr)}
-                            >
-                                <Text style={[
-                                    styles.dayText,
-                                    { color: isSelected ? '#fff' : textColor },
-                                    isToday && !isSelected && { color: iconColor, fontWeight: '600' }
-                                ]}>
-                                    {day}
-                                </Text>
-                                {hasDot && !isSelected && (
-                                    <View style={[styles.eventDot, { backgroundColor: dotColor }]} />
-                                )}
+                        {/* Month Header */}
+                        <View style={[styles.monthHeader, { backgroundColor: cardBg }]}>
+                            <TouchableOpacity onPress={goToPreviousMonth} style={styles.navButton}>
+                                <IconSymbol name="chevron.left" size={20} color={iconColor} />
                             </TouchableOpacity>
-                        );
-                    })}
-                </View>
+                            <ThemedText type="subtitle">{monthNames[currentMonth]} {currentYear}</ThemedText>
+                            <TouchableOpacity onPress={goToNextMonth} style={styles.navButton}>
+                                <IconSymbol name="chevron.right" size={20} color={iconColor} />
+                            </TouchableOpacity>
+                        </View>
 
-                {/* Selected Date Events */}
-                {selectedDate && (
-                    <View style={styles.eventsSection}>
-                        <ThemedText type="defaultSemiBold" style={styles.eventsHeader}>
-                            Events on {new Date(selectedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
-                        </ThemedText>
+                        {/* Day Labels */}
+                        <View style={styles.dayLabels}>
+                            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                                <View key={day} style={styles.dayLabel}>
+                                    <ThemedText style={styles.dayLabelText}>{day}</ThemedText>
+                                </View>
+                            ))}
+                        </View>
 
-                        {selectedEvents.length === 0 ? (
-                            <ThemedText style={styles.noEvents}>No events on this date</ThemedText>
-                        ) : (
-                            <View style={styles.eventsList}>
-                                {selectedEvents.map((event) => (
-                                    <View key={event.id} style={[styles.eventCard, { backgroundColor: cardBg }]}>
-                                        <View style={styles.eventHeader}>
-                                            <IconSymbol name="calendar" size={20} color={iconColor} />
-                                            <View style={styles.eventHeaderText}>
-                                                <ThemedText type="defaultSemiBold" style={styles.eventTitle}>
-                                                    {event.title}
-                                                </ThemedText>
-                                                <ThemedText style={styles.eventClubName}>
-                                                    {event.clubName}
-                                                </ThemedText>
+                        {/* Calendar Grid */}
+                        <View style={styles.calendarGrid}>
+                            {calendarDays.map((day, index) => {
+                                if (day === null) {
+                                    return <View key={`empty-${index}`} style={styles.dayCell} />;
+                                }
+
+                                const dateStr = formatDate(currentYear, currentMonth, day);
+                                const isSelected = selectedDate === dateStr;
+                                const isToday = day === now.getDate() && currentMonth === now.getMonth();
+                                const hasDot = hasEvents(day);
+
+                                return (
+                                    <TouchableOpacity
+                                        key={day}
+                                        style={[
+                                            styles.dayCell,
+                                            isSelected && { backgroundColor: selectedBg },
+                                            isToday && !isSelected && { borderColor: iconColor, borderWidth: 1 },
+                                            hasDot && !isSelected && styles.hasEventCell
+                                        ]}
+                                        onPress={() => setSelectedDate(dateStr)}
+                                    >
+                                        <Text style={[
+                                            styles.dayText,
+                                            { color: isSelected ? '#fff' : textColor },
+                                            isToday && !isSelected && { color: iconColor, fontWeight: '700' }
+                                        ]}>
+                                            {day}
+                                        </Text>
+                                        <View style={styles.dotContainer}>
+                                            {hasDot && (
+                                                <View style={[
+                                                    styles.eventDot,
+                                                    { backgroundColor: isSelected ? '#fff' : dotColor }
+                                                ]} />
+                                            )}
+                                        </View>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
+
+                        {/* Selected Date Events */}
+                        {selectedDate && (
+                            <View style={styles.eventsSection}>
+                                <ThemedText type="defaultSemiBold" style={styles.eventsHeader}>
+                                    Events on {new Date(selectedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+                                </ThemedText>
+
+                                {selectedEvents.length === 0 ? (
+                                    <ThemedText style={styles.noEvents}>No events on this date</ThemedText>
+                                ) : (
+                                    <View style={styles.eventsList}>
+                                        {selectedEvents.map((event) => (
+                                            <View key={event.id} style={[styles.eventCard, { backgroundColor: cardBg }]}>
+                                                <View style={styles.eventHeader}>
+                                                    <IconSymbol name="calendar" size={20} color={iconColor} />
+                                                    <View style={styles.eventHeaderText}>
+                                                        <ThemedText type="defaultSemiBold" style={styles.eventTitle}>
+                                                            {event.title}
+                                                        </ThemedText>
+                                                        <ThemedText style={styles.eventClubName}>
+                                                            {event.clubName}
+                                                        </ThemedText>
+                                                    </View>
+                                                </View>
+                                                <View style={styles.eventDetails}>
+                                                    <IconSymbol name="clock" size={14} color={iconColor} style={styles.detailIcon} />
+                                                    <ThemedText style={styles.eventTime}>{event.time}</ThemedText>
+                                                </View>
+                                                <View style={styles.eventDetails}>
+                                                    <IconSymbol name="location" size={14} color={iconColor} style={styles.detailIcon} />
+                                                    <ThemedText style={styles.eventLocation}>{event.location}</ThemedText>
+                                                </View>
                                             </View>
-                                        </View>
-                                        <View style={styles.eventDetails}>
-                                            <IconSymbol name="clock" size={14} color={iconColor} style={styles.detailIcon} />
-                                            <ThemedText style={styles.eventTime}>{event.time}</ThemedText>
-                                        </View>
-                                        <View style={styles.eventDetails}>
-                                            <IconSymbol name="location" size={14} color={iconColor} style={styles.detailIcon} />
-                                            <ThemedText style={styles.eventLocation}>{event.location}</ThemedText>
-                                        </View>
+                                        ))}
                                     </View>
-                                ))}
+                                )}
                             </View>
                         )}
-                    </View>
-                )}
                     </>
                 )}
             </ScrollView>
@@ -295,19 +300,26 @@ const styles = StyleSheet.create({
         aspectRatio: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: 8,
+        borderRadius: 12,
         marginBottom: 4,
-        position: 'relative',
+    },
+    hasEventCell: {
+        backgroundColor: 'rgba(60, 130, 60, 0.08)',
     },
     dayText: {
-        fontSize: 14,
+        fontSize: 16,
+        fontWeight: '500',
+    },
+    dotContainer: {
+        height: 6,
+        marginTop: 2,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     eventDot: {
-        width: 4,
-        height: 4,
-        borderRadius: 2,
-        position: 'absolute',
-        bottom: 8,
+        width: 5,
+        height: 5,
+        borderRadius: 2.5,
     },
     eventsSection: {
         marginTop: 8,
