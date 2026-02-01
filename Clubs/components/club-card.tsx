@@ -191,7 +191,6 @@ const styles = StyleSheet.create({
         marginTop: 12,
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 8,
     },
     tag: {
         paddingHorizontal: 10,
