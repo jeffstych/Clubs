@@ -3,11 +3,10 @@ import { StyleSheet, ScrollView, TouchableOpacity, FlatList, View, TextInput, Pr
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { ClubCard } from '@/components/club-card';
-import { CLUBS, Club } from '@/data/clubs';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useAuth } from '@/context/AuthContext';
-import { getUserPreferenceTags, getRecommendedClubs, getAllTags } from '@/lib/supabase';
+import { getUserPreferenceTags, getRecommendedClubs, getAllTags, getClubs } from '@/lib/supabase';
 
 export default function ExploreScreen() {
   const { session } = useAuth();
@@ -17,6 +16,8 @@ export default function ExploreScreen() {
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [userPreferences, setUserPreferences] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [clubs, setClubs] = useState<any[]>([]);
+  const [clubsLoading, setClubsLoading] = useState(true);
 
   const activeTagColor = useThemeColor({ light: '#fff', dark: '#062406' }, 'tint'); // Text on active tag
   const inactiveTagColor = useThemeColor({ light: '#687076', dark: '#9BA1A6' }, 'text');
@@ -35,7 +36,32 @@ export default function ExploreScreen() {
     } else {
       setLoading(false);
     }
+    loadClubs();
   }, [session]);
+
+  const loadClubs = async () => {
+    try {
+      setClubsLoading(true);
+      const clubsData = await getClubs();
+      if (clubsData) {
+        // Transform Supabase data to match expected structure
+        const transformedClubs = clubsData.map((club: any) => ({
+          id: club.club_id,
+          name: club.club_name,
+          description: club.club_description,
+          tags: club.club_tags || [],
+          category: club.club_category,
+          image: club.club_image,
+          // Add any other fields that ClubCard expects
+        }));
+        setClubs(transformedClubs);
+      }
+    } catch (error) {
+      console.error('Error loading clubs:', error);
+    } finally {
+      setClubsLoading(false);
+    }
+  };
 
   const loadUserPreferences = async () => {
     if (!session?.user?.id) return;
@@ -67,16 +93,20 @@ export default function ExploreScreen() {
       }
     } catch (error) {
       console.error('Error loading tags:', error);
-      // Fallback to extracting from clubs
+      // Fallback to extracting from loaded clubs
       const tags = new Set<string>();
-      CLUBS.forEach((club) => club.tags.forEach((tag) => tags.add(tag)));
+      clubs.forEach((club) => {
+        if (club.tags && Array.isArray(club.tags)) {
+          club.tags.forEach((tag: string) => tags.add(tag));
+        }
+      });
       setAllTags(Array.from(tags).sort());
     }
   };
 
   // Sorting and Filtering Logic with User Preference Prioritization
   const sortedClubs = useMemo(() => {
-    let filtered = CLUBS;
+    let filtered = clubs;
 
     // Filter by Search Query
     if (searchQuery) {
@@ -93,8 +123,8 @@ export default function ExploreScreen() {
       let selectedTagsScore = 0;
 
       // Calculate user preference overlap score
-      if (userPreferences.length > 0) {
-        club.tags.forEach((tag) => {
+      if (userPreferences.length > 0 && club.tags) {
+        club.tags.forEach((tag: string) => {
           if (userPreferences.includes(tag)) {
             userPreferenceScore += 1;
           }
@@ -102,8 +132,8 @@ export default function ExploreScreen() {
       }
 
       // Calculate selected tags score (for manual filtering)
-      if (selectedTags.length > 0) {
-        club.tags.forEach((tag) => {
+      if (selectedTags.length > 0 && club.tags) {
+        club.tags.forEach((tag: string) => {
           if (selectedTags.includes(tag)) {
             selectedTagsScore += 1;
           }
@@ -140,7 +170,7 @@ export default function ExploreScreen() {
       }
       return a.name.localeCompare(b.name);
     });
-  }, [selectedTags, searchQuery, sortBy, userPreferences]);
+  }, [selectedTags, searchQuery, sortBy, userPreferences, clubs]);
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -150,11 +180,16 @@ export default function ExploreScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <FlatList
-        data={sortedClubs}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <ClubCard club={item} />}
-        contentContainerStyle={styles.contentContainer}
+      {clubsLoading ? (
+        <View style={styles.loadingContainer}>
+          <ThemedText>Loading clubs...</ThemedText>
+        </View>
+      ) : (
+        <FlatList
+          data={sortedClubs}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => <ClubCard club={item} />}
+          contentContainerStyle={styles.contentContainer}
         ListHeaderComponent={
           <>
             <ThemedView style={styles.header}>
@@ -264,6 +299,7 @@ export default function ExploreScreen() {
           </>
         }
       />
+      )}
     </ThemedView>
   );
 }
@@ -271,6 +307,12 @@ export default function ExploreScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 60,
   },
   contentContainer: {
     padding: 16,
