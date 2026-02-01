@@ -7,11 +7,9 @@ import { CLUBS, Club } from '@/data/clubs';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 
-export default function ForYouScreen() {
+export default function ExploreScreen() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [sortBy, setSortBy] = useState<'name' | 'category' | 'default'>('default');
   const [showSortDropdown, setShowSortDropdown] = useState(false);
 
@@ -25,16 +23,11 @@ export default function ForYouScreen() {
   const borderColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.1)', dark: 'rgba(255, 255, 255, 0.2)' }, 'icon');
   const searchTextColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
 
-  // Extract all unique tags and categories from clubs
+  // Extract all unique tags from clubs
   const allTags = useMemo(() => {
     const tags = new Set<string>();
     CLUBS.forEach((club) => club.tags.forEach((tag) => tags.add(tag)));
     return Array.from(tags).sort();
-  }, []);
-
-  const allCategories = useMemo(() => {
-    const categories = new Set<string>(CLUBS.map(c => c.category));
-    return Array.from(categories).sort();
   }, []);
 
   // Sorting and Filtering Logic
@@ -48,11 +41,6 @@ export default function ForYouScreen() {
         club.name.toLowerCase().includes(query) ||
         club.description.toLowerCase().includes(query)
       );
-    }
-
-    // Filter by Category
-    if (selectedCategory) {
-      filtered = filtered.filter(club => club.category === selectedCategory);
     }
 
     if (selectedTags.length === 0) {
@@ -87,7 +75,7 @@ export default function ForYouScreen() {
       }
       return a.name.localeCompare(b.name);
     });
-  }, [selectedTags, searchQuery, selectedCategory, sortBy]);
+  }, [selectedTags, searchQuery, sortBy]);
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -105,7 +93,7 @@ export default function ForYouScreen() {
         ListHeaderComponent={
           <>
             <ThemedView style={styles.header}>
-              <ThemedText type="title">For You</ThemedText>
+              <ThemedText type="title">Explore</ThemedText>
               <ThemedText style={styles.subtitle}>
                 Select your interests to get personalized club recommendations.
               </ThemedText>
@@ -123,56 +111,13 @@ export default function ForYouScreen() {
               />
             </View>
 
-            {/* Category Dropdown */}
+            {/* Controls Section */}
             <View style={styles.controlsSection}>
-              <Pressable
-                style={[
-                  styles.dropdownButton,
-                  { borderColor: borderColor, backgroundColor: inputBgColor }
-                ]}
-                onPress={() => setShowCategoryDropdown(!showCategoryDropdown)}
-              >
-                <ThemedText style={styles.dropdownButtonText}>
-                  {selectedCategory ? selectedCategory : "All Categories"}
-                </ThemedText>
-                <IconSymbol
-                  name={showCategoryDropdown ? "chevron.up" : "chevron.down"}
-                  size={16}
-                  color={inactiveTagColor}
-                />
-              </Pressable>
-
-              {showCategoryDropdown && (
-                <View style={[styles.dropdownMenu, { backgroundColor: inputBgColor, borderColor }]}>
-                  <Pressable
-                    style={[styles.dropdownItem, !selectedCategory && styles.dropdownItemSelected]}
-                    onPress={() => {
-                      setSelectedCategory(null);
-                      setShowCategoryDropdown(false);
-                    }}
-                  >
-                    <ThemedText>All Categories</ThemedText>
-                  </Pressable>
-                  {allCategories.map(cat => (
-                    <Pressable
-                      key={cat}
-                      style={[styles.dropdownItem, selectedCategory === cat && styles.dropdownItemSelected]}
-                      onPress={() => {
-                        setSelectedCategory(cat);
-                        setShowCategoryDropdown(false);
-                      }}
-                    >
-                      <ThemedText>{cat}</ThemedText>
-                    </Pressable>
-                  ))}
-                </View>
-              )}
-
               {/* Sort Dropdown */}
               <Pressable
                 style={[
                   styles.dropdownButton,
-                  { borderColor: borderColor, backgroundColor: inputBgColor, marginTop: 12 }
+                  { borderColor: borderColor, backgroundColor: inputBgColor }
                 ]}
                 onPress={() => setShowSortDropdown(!showSortDropdown)}
               >
