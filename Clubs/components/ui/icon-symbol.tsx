@@ -36,6 +36,7 @@ const MAPPING = {
   'message': 'chat',
   'plus': 'add',
   'checkmark': 'check',
+  'shield.fill': 'shield',
 } as IconMapping;
 
 /**
