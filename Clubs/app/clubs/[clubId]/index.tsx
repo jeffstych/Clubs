@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { Image } from 'expo-image';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
@@ -17,8 +17,8 @@ export default function ClubDetailScreen() {
     const [loading, setLoading] = useState(true);
     const [isFollowing, setIsFollowing] = useState(false);
     const [followLoading, setFollowLoading] = useState(false);
-    const [eventSignUps, setEventSignUps] = useState<{[key: string]: boolean}>({});
-    const [eventLoading, setEventLoading] = useState<{[key: string]: boolean}>({});
+    const [eventSignUps, setEventSignUps] = useState<{ [key: string]: boolean }>({});
+    const [eventLoading, setEventLoading] = useState<{ [key: string]: boolean }>({});
 
     // Get the club ID as a string
     const clubIdString = Array.isArray(clubId) ? clubId[0] : clubId;
@@ -31,10 +31,10 @@ export default function ClubDetailScreen() {
 
     const loadClubData = async () => {
         if (!clubIdString) return;
-        
+
         try {
             setLoading(true);
-            
+
             // Load club data from Supabase
             const clubs = await getClubs();
             const foundClub = clubs?.find((c: any) => c.club_id === clubIdString);
@@ -49,16 +49,16 @@ export default function ClubDetailScreen() {
                     image: foundClub.club_image
                 });
             }
-            
+
             // Load events
             await loadEvents();
-            
+
             // Check follow status if user is logged in
             if (session?.user?.id) {
                 const { data: following } = await isFollowingClub(session.user.id, clubIdString);
                 setIsFollowing(following || false);
             }
-            
+
         } catch (error) {
             console.error('Error loading club data:', error);
         } finally {
@@ -68,15 +68,15 @@ export default function ClubDetailScreen() {
 
     const loadEvents = async () => {
         if (!clubIdString) return;
-        
+
         try {
             const { data: clubEvents } = await getClubEvents(clubIdString);
             if (clubEvents) {
                 setEvents(clubEvents);
-                
+
                 // Check signup status for each event if user is logged in
                 if (session?.user?.id) {
-                    const signUpStatuses: {[key: string]: boolean} = {};
+                    const signUpStatuses: { [key: string]: boolean } = {};
                     for (const event of clubEvents) {
                         const { data: signedUp } = await isSignedUpForEvent(session.user.id, event.event_id);
                         signUpStatuses[event.event_id] = signedUp || false;
@@ -94,9 +94,9 @@ export default function ClubDetailScreen() {
             console.log('User must be logged in to follow clubs');
             return;
         }
-        
+
         setFollowLoading(true);
-        
+
         try {
             if (isFollowing) {
                 const { error } = await unfollowClub(session.user.id, clubIdString);
@@ -121,12 +121,12 @@ export default function ClubDetailScreen() {
             console.log('User must be logged in to sign up for events');
             return;
         }
-        
+
         setEventLoading(prev => ({ ...prev, [eventId]: true }));
-        
+
         try {
             const isCurrentlySignedUp = eventSignUps[eventId];
-            
+
             if (isCurrentlySignedUp) {
                 const { error } = await removeFromEvent(session.user.id, eventId);
                 if (!error) {
@@ -179,6 +179,12 @@ export default function ClubDetailScreen() {
 
     return (
         <ThemedView style={styles.container}>
+            <Stack.Screen
+                options={{
+                    title: "Clubs",
+                    headerBackTitle: "Back", // Removes "(tabs)" which is the default for nested routes
+                }}
+            />
             <ScrollView>
                 {/* Club Header */}
                 <View style={styles.header}>
@@ -211,7 +217,7 @@ export default function ClubDetailScreen() {
                                 </TouchableOpacity>
                             )}
                         </View>
-                        
+
                         <ThemedText style={[styles.description, { color: textColor }]}>
                             {club.description}
                         </ThemedText>
@@ -236,7 +242,7 @@ export default function ClubDetailScreen() {
                 {/* Events Section */}
                 <View style={[styles.eventsSection, { backgroundColor: cardBg }]}>
                     <ThemedText type="subtitle" style={styles.eventsTitle}>Upcoming Events</ThemedText>
-                    
+
                     {loading ? (
                         <ThemedText style={styles.loadingText}>Loading events...</ThemedText>
                     ) : events.length === 0 ? (
@@ -247,7 +253,7 @@ export default function ClubDetailScreen() {
                         events.map((event) => {
                             const isSignedUp = eventSignUps[event.event_id] || false;
                             const isLoading = eventLoading[event.event_id] || false;
-                            
+
                             return (
                                 <View key={event.event_id} style={[styles.eventCard, { backgroundColor: eventBgColor }]}>
                                     <IconSymbol name="sparkles" size={16} color={iconColor} style={styles.eventIcon} />
