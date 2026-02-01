@@ -153,7 +153,6 @@ export default function ProfilePage() {
                   borderBottomLeftRadius: isLast ? 12 : 0,
                   borderBottomRightRadius: isLast ? 12 : 0,
                   borderTopWidth: isFirst ? 1 : 0,
-                  marginBottom: isLast ? 0 : 0, // Keep them together
                 }}
               >
                 <View style={styles.menuItemLeft}>
@@ -185,10 +184,6 @@ export default function ProfilePage() {
         </View>
       </ScrollView>
     </ThemedView>
-  );
-}
-      </ScrollView >
-    </ThemedView >
   );
 }
 
