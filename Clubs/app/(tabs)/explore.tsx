@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { StyleSheet, ScrollView, TouchableOpacity, FlatList, View, TextInput, Pressable } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -6,12 +6,17 @@ import { ClubCard } from '@/components/club-card';
 import { CLUBS, Club } from '@/data/clubs';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useAuth } from '@/context/AuthContext';
+import { getUserPreferenceTags, getRecommendedClubs, getAllTags } from '@/lib/supabase';
 
 export default function ExploreScreen() {
+  const { session } = useAuth();
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'category' | 'default'>('default');
   const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [userPreferences, setUserPreferences] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const activeTagColor = useThemeColor({ light: '#fff', dark: '#062406' }, 'tint'); // Text on active tag
   const inactiveTagColor = useThemeColor({ light: '#687076', dark: '#9BA1A6' }, 'text');
@@ -23,14 +28,53 @@ export default function ExploreScreen() {
   const borderColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.1)', dark: 'rgba(255, 255, 255, 0.2)' }, 'icon');
   const searchTextColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
 
-  // Extract all unique tags from clubs
-  const allTags = useMemo(() => {
-    const tags = new Set<string>();
-    CLUBS.forEach((club) => club.tags.forEach((tag) => tags.add(tag)));
-    return Array.from(tags).sort();
+  // Load user preferences on mount
+  useEffect(() => {
+    if (session?.user?.id) {
+      loadUserPreferences();
+    } else {
+      setLoading(false);
+    }
+  }, [session]);
+
+  const loadUserPreferences = async () => {
+    if (!session?.user?.id) return;
+    
+    try {
+      const { data: prefsData } = await getUserPreferenceTags(session.user.id);
+      if (prefsData) {
+        setUserPreferences(prefsData.preferenceTags);
+      }
+    } catch (error) {
+      console.error('Error loading user preferences:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Get all available tags from Supabase
+  const [allTags, setAllTags] = useState<string[]>([]);
+  
+  useEffect(() => {
+    loadAllTags();
   }, []);
 
-  // Sorting and Filtering Logic
+  const loadAllTags = async () => {
+    try {
+      const { data: tagsData } = await getAllTags();
+      if (tagsData) {
+        setAllTags(tagsData);
+      }
+    } catch (error) {
+      console.error('Error loading tags:', error);
+      // Fallback to extracting from clubs
+      const tags = new Set<string>();
+      CLUBS.forEach((club) => club.tags.forEach((tag) => tags.add(tag)));
+      setAllTags(Array.from(tags).sort());
+    }
+  };
+
+  // Sorting and Filtering Logic with User Preference Prioritization
   const sortedClubs = useMemo(() => {
     let filtered = CLUBS;
 
@@ -43,30 +87,51 @@ export default function ExploreScreen() {
       );
     }
 
-    if (selectedTags.length === 0) {
-      // No tags selected, apply sort directly
-      if (sortBy === 'name') {
-        return [...filtered].sort((a, b) => a.name.localeCompare(b.name));
-      } else if (sortBy === 'category') {
-        return [...filtered].sort((a, b) => a.category.localeCompare(b.category));
-      }
-      return filtered;
-    }
+    // Calculate relevance scores for each club
+    const clubsWithScores = filtered.map((club) => {
+      let userPreferenceScore = 0;
+      let selectedTagsScore = 0;
 
-    return [...filtered].map((club) => {
-      // Calculate a relevance score
-      let score = 0;
-      club.tags.forEach((tag) => {
-        if (selectedTags.includes(tag)) {
-          score += 1;
-        }
-      });
-      return { ...club, score };
-    }).sort((a, b) => {
-      // Sort by score descending
-      if (b.score !== a.score) {
-        return b.score - a.score;
+      // Calculate user preference overlap score
+      if (userPreferences.length > 0) {
+        club.tags.forEach((tag) => {
+          if (userPreferences.includes(tag)) {
+            userPreferenceScore += 1;
+          }
+        });
       }
+
+      // Calculate selected tags score (for manual filtering)
+      if (selectedTags.length > 0) {
+        club.tags.forEach((tag) => {
+          if (selectedTags.includes(tag)) {
+            selectedTagsScore += 1;
+          }
+        });
+      }
+
+      return {
+        ...club,
+        userPreferenceScore,
+        selectedTagsScore,
+        totalScore: selectedTagsScore > 0 ? selectedTagsScore : userPreferenceScore
+      };
+    });
+
+    // Sort logic
+    return clubsWithScores.sort((a, b) => {
+      // If tags are manually selected, prioritize selected tags score
+      if (selectedTags.length > 0) {
+        if (b.selectedTagsScore !== a.selectedTagsScore) {
+          return b.selectedTagsScore - a.selectedTagsScore;
+        }
+      } else {
+        // Default: prioritize user preference overlap
+        if (b.userPreferenceScore !== a.userPreferenceScore) {
+          return b.userPreferenceScore - a.userPreferenceScore;
+        }
+      }
+
       // Apply secondary sort
       if (sortBy === 'name') {
         return a.name.localeCompare(b.name);
@@ -75,7 +140,7 @@ export default function ExploreScreen() {
       }
       return a.name.localeCompare(b.name);
     });
-  }, [selectedTags, searchQuery, sortBy]);
+  }, [selectedTags, searchQuery, sortBy, userPreferences]);
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -189,7 +254,12 @@ export default function ExploreScreen() {
               </ScrollView>
             </View>
             <ThemedText type="subtitle" style={styles.sectionTitle}>
-              {selectedTags.length > 0 ? "Recommended Clubs" : "All Clubs"}
+              {selectedTags.length > 0 
+                ? "Filtered Clubs" 
+                : userPreferences.length > 0 
+                  ? "Recommended for You" 
+                  : "All Clubs"
+              }
             </ThemedText>
           </>
         }
