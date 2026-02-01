@@ -105,11 +105,7 @@ export default function ForYouScreen() {
         ListHeaderComponent={
           <>
             <ThemedView style={styles.header}>
-<<<<<<< HEAD
               <ThemedText type="title">Explore</ThemedText>
-=======
-              <ThemedText type="title">For You</ThemedText>
->>>>>>> main
               <ThemedText style={styles.subtitle}>
                 Select your interests to get personalized club recommendations.
               </ThemedText>
