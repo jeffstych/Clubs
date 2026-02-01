@@ -292,6 +292,26 @@ export async function getClubById(clubId: string) {
   }
 }
 
+// Get club by name
+export async function getClubByName(clubName: string) {
+  try {
+    const { data, error } = await supabase
+      .from('clubs')
+      .select('club_id, club_name, club_description, club_tags, club_category, club_image')
+      .eq('club_name', clubName)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching club by name:', error);
+      return { data: null, error };
+    }
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error getting club by name:', error);
+    return { data: null, error };
+  }
+}
+
 // Search clubs by name or description
 export async function searchClubs(searchTerm: string) {
   try {

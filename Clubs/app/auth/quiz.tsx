@@ -41,6 +41,7 @@ export default function QuizScreen() {
   const inactiveBgColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.05)', dark: 'rgba(255, 255, 255, 0.1)' }, 'background');
   const borderColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.1)', dark: 'rgba(255, 255, 255, 0.2)' }, 'icon');
   const inputBgColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.03)', dark: 'rgba(255, 255, 255, 0.05)' }, 'background');
+  const textInputColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
 
   // Extract all unique tags and categories from clubs
   const allAvailableInterests = useMemo(() => {
@@ -244,7 +245,7 @@ export default function QuizScreen() {
             <View style={[styles.searchContainer, { backgroundColor: inputBgColor }]}>
               <IconSymbol name="magnifyingglass" size={20} color={inactiveTagColor} />
               <TextInput
-                style={[styles.searchInput, { color: useThemeColor({ light: '#000', dark: '#fff' }, 'text') }]}
+                style={[styles.searchInput, { color: textInputColor }]}
                 placeholder="Search interests (coding, sports...)"
                 placeholderTextColor={inactiveTagColor}
                 value={searchQuery}
