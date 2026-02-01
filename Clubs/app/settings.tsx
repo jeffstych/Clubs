@@ -17,7 +17,7 @@ export default function SettingsScreen() {
 
     return (
         <ThemedView style={styles.container}>
-            <Stack.Screen options={{ title: 'Settings', headerBackTitle: 'Profile' }} />
+            <Stack.Screen options={{ title: 'Settings', headerBackTitle: 'Back' }} />
 
             <View style={[styles.section, { backgroundColor: itemBg, borderColor }]}>
                 <View style={styles.row}>
