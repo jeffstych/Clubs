@@ -137,7 +137,7 @@ export default function AskScreen() {
                     name="leaf.fill"
                     size={320}
                     color={greenText}
-                    style={{ opacity: 0.05, transform: [{ rotate: '-15deg' }] }}
+                    style={{ opacity: 0.1, transform: [{ rotate: '-15deg' }] }}
                 />
             </View>
 
