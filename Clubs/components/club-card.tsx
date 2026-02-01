@@ -143,7 +143,10 @@ export function ClubCard({ club, onFollowChange }: ClubCardProps) {
     };
 
     return (
-        <View>
+        <Pressable
+            onPress={() => router.push(`/clubs/${club.id}` as any)}
+            style={({ pressed }) => ({ opacity: pressed ? 0.95 : 1 })}
+        >
             <ThemedView style={{ ...styles.card, backgroundColor: cardBackgroundColor }}>
                 <Image source={{ uri: club.image }} style={styles.image} contentFit="cover" transition={1000} />
                 <View style={styles.content}>
@@ -222,7 +225,7 @@ export function ClubCard({ club, onFollowChange }: ClubCardProps) {
                     </View>
                 </View>
             </ThemedView>
-        </View>
+        </Pressable>
     );
 }
 
