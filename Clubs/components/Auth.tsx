@@ -21,6 +21,7 @@ export default function Auth() {
   const textColor = useThemeColor({}, 'text');
   const backgroundColor = useThemeColor({}, 'background');
   const borderColor = useThemeColor({ light: '#E8E8E8', dark: '#2E2E2E' }, 'icon');
+  const buttonTextColor = useThemeColor({ light: '#ffffff', dark: '#031103' }, 'background');
 
   async function signInWithEmail() {
     setLoading(true);
@@ -81,9 +82,9 @@ export default function Auth() {
           disabled={loading}
         >
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={buttonTextColor} />
           ) : (
-            <ThemedText style={styles.buttonText}>Sign in</ThemedText>
+            <ThemedText style={[styles.buttonText, { color: buttonTextColor }]}>Sign in</ThemedText>
           )}
         </TouchableOpacity>
       </View>
