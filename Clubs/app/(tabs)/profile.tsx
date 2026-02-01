@@ -137,7 +137,10 @@ export default function ProfilePage() {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={[styles.editButton, { borderColor: tintColor }]}>
+          <TouchableOpacity
+            style={[styles.editButton, { borderColor: tintColor }]}
+            onPress={() => router.push('/edit-profile')}
+          >
             <ThemedText style={{ color: tintColor, fontWeight: '600' }}>Edit Profile</ThemedText>
           </TouchableOpacity>
         </View>
