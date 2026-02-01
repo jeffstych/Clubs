@@ -39,7 +39,7 @@ export default function LoginScreen() {
         <View style={[styles.logoContainer, { backgroundColor: tintColor + '20' }]}>
           <IconSymbol name="leaf.fill" size={40} color={tintColor} />
         </View>
-        <ThemedText type="title" style={styles.title}>Clubbs</ThemedText>
+        <ThemedText type="title" style={styles.title}>Clubs</ThemedText>
         <ThemedText style={styles.subtitle}>Discover your community at MSU</ThemedText>
       </View>
       <Auth />
