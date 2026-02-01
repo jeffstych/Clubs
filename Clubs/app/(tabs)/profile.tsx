@@ -103,7 +103,14 @@ export default function ProfilePage() {
 
         <View style={[styles.headerCard, { backgroundColor: itemBg, borderColor }]}>
           <View style={styles.profileInfo}>
-            <View style={[styles.avatarContainer, { backgroundColor: tintColor + '20' }]}>
+            <View style={[
+              styles.avatarContainer,
+              {
+                backgroundColor: tintColor + '20',
+                borderColor: tintColor,
+                borderWidth: 1
+              }
+            ]}>
               <IconSymbol name="leaf.fill" size={32} color={tintColor} />
             </View>
             <View style={styles.userMeta}>
