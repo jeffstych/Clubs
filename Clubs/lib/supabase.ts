@@ -12,7 +12,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Example: Fetch clubs
 export async function getClubs() {
-    const { data, error } = await supabase.from('clubs').select('*');
+    const { data, error } = await supabase.from('clubs').select('club_id, club_name, club_description, club_tags, club_category, club_image');
     if (error) console.error('Error:', error);
     return data;
 }
@@ -47,14 +47,14 @@ export async function getRecommendedClubs(userId: string) {
       // Return all clubs if user has no preferences
       const { data: allClubs, error: clubsError } = await supabase
         .from('clubs')
-        .select('*');
+        .select('club_id, club_name, club_description, club_tags, club_category, club_image');
       return { data: allClubs, error: clubsError };
     }
 
     // Get clubs whose tags overlap with user preference tags
     const { data: clubs, error: clubsError } = await supabase
       .from('clubs')
-      .select('*')
+      .select('club_id, club_name, club_description, club_tags, club_category, club_image')
       .overlaps('club_tags', profile.preference_tags);
 
     return { data: clubs, error: clubsError };
@@ -104,8 +104,7 @@ export async function getFollowedClubs(userId: string) {
           club_description,
           club_tags,
           club_category,
-          club_image,
-          created_at
+          club_image
         )
       `)
       .eq('user_id', userId);
