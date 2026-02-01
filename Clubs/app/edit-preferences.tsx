@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   StatusBar,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -45,12 +45,12 @@ export default function EditPreferencesScreen() {
 
     try {
       setLoading(true);
-      
+
       // Get all available tags
       console.log('Loading tags...');
       const { data: tagsData, error: tagsError } = await getAllTags();
       console.log('Tags data received:', tagsData, 'Error:', tagsError);
-      
+
       if (tagsData) {
         setAllTags(tagsData);
         console.log('Set all tags:', tagsData.length, 'tags');
@@ -60,7 +60,7 @@ export default function EditPreferencesScreen() {
       console.log('Loading user preferences for:', session.user.id);
       const { data: prefsData, error: prefsError } = await getUserPreferenceTags(session.user.id);
       console.log('Preferences data received:', prefsData, 'Error:', prefsError);
-      
+
       if (prefsData) {
         setSelectedTags(prefsData.preferenceTags);
         console.log('Set selected tags:', prefsData.preferenceTags);
@@ -88,9 +88,9 @@ export default function EditPreferencesScreen() {
 
     try {
       setSaving(true);
-      
+
       const { error } = await updateUserPreferences(session.user.id, selectedTags);
-      
+
       if (error) {
         Alert.alert('Error', 'Failed to update preferences');
       } else {
@@ -121,6 +121,12 @@ export default function EditPreferencesScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      <Stack.Screen
+        options={{
+          title: "Edit Your Preferences",
+          headerBackTitle: "Back",
+        }}
+      />
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent={true} />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.push('/(tabs)/profile')} style={styles.backButton}>

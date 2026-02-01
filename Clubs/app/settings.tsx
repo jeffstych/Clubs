@@ -17,13 +17,15 @@ export default function SettingsScreen() {
 
     return (
         <ThemedView style={styles.container}>
-            <Stack.Screen options={{ title: 'Settings', headerBackTitle: 'Profile' }} />
+            <Stack.Screen options={{ title: 'Settings', headerBackTitle: 'Back' }} />
 
             <View style={[styles.section, { backgroundColor: itemBg, borderColor }]}>
                 <View style={styles.row}>
                     <View style={styles.rowText}>
-                        <ThemedText type="defaultSemiBold">Dark Mode</ThemedText>
-                        <ThemedText style={styles.rowSubtext}>Use dark theme for the application</ThemedText>
+                        <ThemedText type="defaultSemiBold">{isDark ? 'Light Mode?' : 'Dark Mode?'}</ThemedText>
+                        <ThemedText style={styles.rowSubtext}>
+                            {isDark ? 'Use the light theme for this application' : 'Use the dark theme for this application'}
+                        </ThemedText>
                     </View>
                     <Switch
                         value={isDark}

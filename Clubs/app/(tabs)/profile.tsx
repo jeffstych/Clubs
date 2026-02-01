@@ -33,7 +33,7 @@ export default function ProfilePage() {
 
     try {
       setLoading(true);
-      
+
       // Get user preferences
       const { data: prefsData } = await getUserPreferenceTags(session.user.id);
       if (prefsData) {
@@ -93,6 +93,7 @@ export default function ProfilePage() {
 
   const menuItems = [
     { icon: 'gearshape.fill', label: 'Settings', href: '/settings' },
+    { icon: 'sparkles', label: 'Edit Preferences', href: '/edit-preferences' },
   ];
 
   return (
@@ -102,10 +103,16 @@ export default function ProfilePage() {
 
         <View style={[styles.headerCard, { backgroundColor: itemBg, borderColor }]}>
           <View style={styles.profileInfo}>
-            <Image
-              source={user.avatar_url}
-              style={styles.avatar}
-            />
+            <View style={[
+              styles.avatarContainer,
+              {
+                backgroundColor: tintColor + '20',
+                borderColor: tintColor,
+                borderWidth: 1
+              }
+            ]}>
+              <IconSymbol name="leaf.fill" size={32} color={tintColor} />
+            </View>
             <View style={styles.userMeta}>
               <ThemedText type="subtitle">{user.name}</ThemedText>
               <ThemedText style={{ color: secondaryTextColor }}>{user.email}</ThemedText>
@@ -125,6 +132,9 @@ export default function ProfilePage() {
               <ThemedText type="defaultSemiBold">{userPreferences.length}</ThemedText>
               <ThemedText style={[styles.statLabel, { color: secondaryTextColor }]}>Interests</ThemedText>
             </View>
+            <TouchableOpacity style={[styles.smallButton, { borderColor: tintColor }]}>
+              <ThemedText style={{ color: tintColor, fontSize: 12, fontWeight: '600' }}>Clubs</ThemedText>
+            </TouchableOpacity>
           </View>
 
           <TouchableOpacity style={[styles.editButton, { borderColor: tintColor }]}>
@@ -162,24 +172,6 @@ export default function ProfilePage() {
               </TouchableOpacity>
             );
           })}
-
-          <TouchableOpacity
-            onPress={() => router.push('/edit-preferences')}
-            style={{
-              ...styles.menuItem,
-              backgroundColor: itemBg,
-              borderTopColor: borderColor,
-              borderBottomColor: borderColor,
-              borderLeftColor: borderColor,
-              borderRightColor: borderColor,
-            }}
-          >
-            <View style={styles.menuItemLeft}>
-              <ThemedText style={styles.emojiIcon}>🎯</ThemedText>
-              <ThemedText style={styles.menuLabel}>Edit Preferences</ThemedText>
-            </View>
-            <IconSymbol name="chevron.right" size={16} color={secondaryTextColor} />
-          </TouchableOpacity>
 
           <TouchableOpacity
             style={{
@@ -226,11 +218,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  avatar: {
+  avatarContainer: {
     width: 70,
     height: 70,
     borderRadius: 35,
     marginRight: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   userMeta: {
     flex: 1,
@@ -243,6 +237,7 @@ const styles = StyleSheet.create({
   },
   statsRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(128, 128, 128, 0.2)',
     paddingTop: 16,
@@ -262,6 +257,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     alignItems: 'center',
+  },
+  smallButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginLeft: 'auto',
   },
   menuSection: {
     gap: 0,
