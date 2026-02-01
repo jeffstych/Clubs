@@ -153,6 +153,7 @@ export default function ClubDetailScreen() {
     const eventBgColor = useThemeColor({ light: 'rgba(60, 130, 60, 0.1)', dark: 'rgba(255, 255, 255, 0.1)' }, 'background');
     const tagBackgroundColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.08)', dark: 'rgba(255, 255, 255, 0.1)' }, 'background');
     const tagBorderColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.15)', dark: 'rgba(255, 255, 255, 0.2)' }, 'icon');
+    const checkmarkColor = useThemeColor({ light: '#fff', dark: '#062406' }, 'background');
 
     if (loading) {
         return (
@@ -289,7 +290,7 @@ export default function ClubDetailScreen() {
                                             <IconSymbol
                                                 name={isLoading ? "ellipsis" : isSignedUp ? "checkmark" : "plus"}
                                                 size={14}
-                                                color={isSignedUp ? '#fff' : iconColor}
+                                                color={isSignedUp ? checkmarkColor : iconColor}
                                             />
                                         </TouchableOpacity>
                                     )}
