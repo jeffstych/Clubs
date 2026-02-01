@@ -781,6 +781,31 @@ export async function getUserSignedUpEvents(userId: string) {
   }
 }
 
+// Get all events for a specific club
+export async function getClubEvents(clubId: string) {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    
+    const { data, error } = await supabase
+      .from('events')
+      .select('event_id, event_title, event_description, event_date, event_time, location')
+      .eq('club_id', clubId)
+      .gte('event_date', today)
+      .order('event_date', { ascending: true })
+      .order('event_time', { ascending: true });
+    
+    if (error) {
+      console.error('Error fetching club events:', error);
+      return { data: null, error };
+    }
+    
+    return { data: data || [], error: null };
+  } catch (error) {
+    console.error('Error getting club events:', error);
+    return { data: null, error };
+  }
+}
+
 // ===================
 // TAGS APIs
 // ===================
