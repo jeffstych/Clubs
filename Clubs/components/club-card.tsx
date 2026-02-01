@@ -1,6 +1,5 @@
 import { StyleSheet, View, Pressable, TouchableOpacity } from 'react-native';
-import { useState } from 'react';
-import { Link } from 'expo-router';
+import { router } from 'expo-router';
 import { Image } from 'expo-image';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -67,66 +66,86 @@ export function ClubCard({ club }: ClubCardProps) {
     };
 
     return (
-        <Link href={`/clubs/${club.id}` as any} asChild>
-            <Pressable>
-                <ThemedView style={[styles.card, { backgroundColor: cardBackgroundColor }]}>
-                    <Image source={{ uri: club.image }} style={styles.image} contentFit="cover" transition={1000} />
-                    <View style={styles.content}>
-                        <View style={styles.header}>
-                            <ThemedText type="subtitle">{club.name}</ThemedText>
-                            <View style={styles.buttonGroup}>
-                                <TouchableOpacity
-                                    style={[styles.followButton, { backgroundColor: following ? 'transparent' : followBtnBg, borderColor: followBtnBg, borderWidth: 1 }]}
-                                    onPress={handleFollowPress}
-                                >
-                                    <ThemedText style={[styles.followButtonText, { color: following ? followBtnBg : followBtnText }]}>
-                                        {following ? 'Following' : 'Follow'}
-                                    </ThemedText>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={[styles.viewMoreButton, { borderColor: followBtnBg, borderWidth: 1 }]}
-                                    onPress={() => { }}
-                                >
-                                    <ThemedText style={[styles.viewMoreButtonText, { color: followBtnBg }]}>
-                                        View More
-                                    </ThemedText>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                        <ThemedText style={styles.category}>{club.category}</ThemedText>
-                        <ThemedText numberOfLines={2} style={styles.description}>
-                            {club.description}
-                        </ThemedText>
-                        {club.nextEvent && (
-                            <View style={[styles.eventStrip, { backgroundColor: eventBgColor }]}>
-                                <IconSymbol name="sparkles" size={14} color={iconColor} style={styles.eventIcon} />
-                                <ThemedText style={styles.eventText}>
-                                    Next: {club.nextEvent.time} @ {club.nextEvent.location}
+        <Pressable onPress={() => router.push(`/clubs/${club.id}` as any)}>
+            <ThemedView style={{ ...styles.card, backgroundColor: cardBackgroundColor }}>
+                <Image source={{ uri: club.image }} style={styles.image} contentFit="cover" transition={1000} />
+                <View style={styles.content}>
+                    <View style={styles.header}>
+                        <ThemedText type="subtitle">{club.name}</ThemedText>
+                        <View style={styles.buttonGroup}>
+                            <TouchableOpacity
+                                style={{
+                                    ...styles.followButton,
+                                    backgroundColor: following ? 'transparent' : followBtnBg,
+                                    borderColor: followBtnBg,
+                                    borderWidth: 1,
+                                }}
+                                onPress={handleFollowPress}
+                            >
+                                <ThemedText style={{
+                                    ...styles.followButtonText,
+                                    color: following ? followBtnBg : followBtnText,
+                                }}>
+                                    {following ? 'Following' : 'Follow'}
                                 </ThemedText>
-                                <TouchableOpacity
-                                    style={[styles.addEventButton, { backgroundColor: eventAdded ? iconColor : 'transparent', borderColor: iconColor, borderWidth: 1 }]}
-                                    onPress={handleAddEvent}
-                                >
-                                    <IconSymbol
-                                        name={eventAdded ? "checkmark" : "plus"}
-                                        size={12}
-                                        color={eventAdded ? '#fff' : iconColor}
-                                    />
-                                </TouchableOpacity>
-                            </View>
-                        )}
-
-                        <View style={styles.tagsContainer}>
-                            {club.tags.map((tag) => (
-                                <View key={tag} style={[styles.tag, { backgroundColor: tagBackgroundColor, borderColor: tagBorderColor, borderWidth: 1 }]}>
-                                    <ThemedText style={styles.tagText}>#{tag}</ThemedText>
-                                </View>
-                            ))}
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={{
+                                    ...styles.viewMoreButton,
+                                    borderColor: followBtnBg,
+                                    borderWidth: 1,
+                                }}
+                                onPress={() => { }}
+                            >
+                                <ThemedText style={{ ...styles.viewMoreButtonText, color: followBtnBg }}>
+                                    View More
+                                </ThemedText>
+                            </TouchableOpacity>
                         </View>
                     </View>
-                </ThemedView>
-            </Pressable>
-        </Link>
+                    <ThemedText style={styles.category}>{club.category}</ThemedText>
+                    <ThemedText numberOfLines={2} style={styles.description}>
+                        {club.description}
+                    </ThemedText>
+                    {club.nextEvent && (
+                        <View style={{ ...styles.eventStrip, backgroundColor: eventBgColor }}>
+                            <IconSymbol name="sparkles" size={14} color={iconColor} style={styles.eventIcon} />
+                            <ThemedText style={styles.eventText}>
+                                Next: {club.nextEvent.time} @ {club.nextEvent.location}
+                            </ThemedText>
+                            <TouchableOpacity
+                                style={{
+                                    ...styles.addEventButton,
+                                    backgroundColor: eventAdded ? iconColor : 'transparent',
+                                    borderColor: iconColor,
+                                    borderWidth: 1,
+                                }}
+                                onPress={handleAddEvent}
+                            >
+                                <IconSymbol
+                                    name={eventAdded ? "checkmark" : "plus"}
+                                    size={12}
+                                    color={eventAdded ? '#fff' : iconColor}
+                                />
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
+                    <View style={styles.tagsContainer}>
+                        {club.tags.map((tag) => (
+                            <View key={tag} style={{
+                                ...styles.tag,
+                                backgroundColor: tagBackgroundColor,
+                                borderColor: tagBorderColor,
+                                borderWidth: 1,
+                            }}>
+                                <ThemedText style={styles.tagText}>#{tag}</ThemedText>
+                            </View>
+                        ))}
+                    </View>
+                </View>
+            </ThemedView>
+        </Pressable>
     );
 }
 
@@ -191,6 +210,7 @@ const styles = StyleSheet.create({
         marginTop: 12,
         flexDirection: 'row',
         flexWrap: 'wrap',
+        gap: 8,
     },
     tag: {
         paddingHorizontal: 10,
