@@ -640,3 +640,79 @@ export async function completeQuiz(userId: string, preferenceTags: string[]) {
   }
 }
 
+// ===================
+// TAGS APIs
+// ===================
+
+// Get all available tags from the tags table
+export async function getAllTags() {
+  try {
+    // Get tags from the dedicated tags table using correct column name
+    const { data: tagsData, error: tagsError } = await supabase
+      .from('tags')
+      .select('tag')
+      .order('tag', { ascending: true });
+    
+    if (tagsError) {
+      console.error('Error fetching tags:', tagsError);
+    }
+    
+    if (tagsData && tagsData.length > 0) {
+      // Convert to array of strings
+      const tags = tagsData
+        .map(item => item.tag)
+        .filter(tag => tag && typeof tag === 'string' && tag.trim().length > 0) // Filter out null/empty
+        .map(tag => tag.trim()) // Trim whitespace
+        .filter((tag, index, array) => array.indexOf(tag) === index); // Remove duplicates
+      
+      console.log('Found tags from tags table:', tags.length, 'tags');
+      return { data: tags, error: null };
+    }
+
+    // Fallback: Extract unique tags from club_tags if tags table is empty or doesn't exist
+    console.log('Tags table not found or empty, extracting from clubs...');
+    const { data: clubsData, error: clubsError } = await supabase
+      .from('clubs')
+      .select('club_tags');
+    
+    if (clubsError) {
+      console.error('Error fetching clubs for tags:', clubsError);
+      // Return common tags as final fallback
+      return { 
+        data: ['Academic', 'Sports', 'Technology', 'Arts', 'Music', 'Gaming', 'Volunteering', 'Social', 'Engineering', 'Creative', 'Leadership', 'Fitness', 'Outdoor', 'Business', 'Science'], 
+        error: null 
+      };
+    }
+
+    // Extract and flatten all unique tags from clubs
+    const allTags = new Set<string>();
+    clubsData?.forEach(club => {
+      if (club.club_tags && Array.isArray(club.club_tags)) {
+        club.club_tags.forEach(tag => {
+          if (typeof tag === 'string' && tag.trim()) {
+            allTags.add(tag.trim());
+          }
+        });
+      }
+    });
+
+    let uniqueTags = Array.from(allTags).sort();
+    
+    // If still no tags found, add some common ones
+    if (uniqueTags.length === 0) {
+      uniqueTags = ['Academic', 'Sports', 'Technology', 'Arts', 'Music', 'Gaming', 'Volunteering', 'Social', 'Engineering', 'Creative', 'Leadership', 'Fitness', 'Outdoor', 'Business', 'Science'];
+    }
+    
+    console.log('Extracted tags from clubs:', uniqueTags.length, 'tags');
+    return { data: uniqueTags, error: null };
+    
+  } catch (error) {
+    console.error('Error getting all tags:', error);
+    // Return fallback tags even on error
+    return { 
+      data: ['Academic', 'Sports', 'Technology', 'Arts', 'Music', 'Gaming', 'Volunteering', 'Social', 'Engineering', 'Creative', 'Leadership', 'Fitness', 'Outdoor', 'Business', 'Science'], 
+      error: null 
+    };
+  }
+}
+
