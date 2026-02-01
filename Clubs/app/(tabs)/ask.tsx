@@ -71,8 +71,8 @@ export default function AskScreen() {
     const cardBg = useThemeColor({ light: '#ffffff', dark: '#151718' }, 'background');
     const inputBg = useThemeColor({ light: '#f5f5f5', dark: '#2a2a2a' }, 'background');
     const userBubbleColor = useThemeColor({ light: '#3c823c', dark: '#3c823c' }, 'tint');
-    const botBubbleColor = useThemeColor({ light: '#ffffff', dark: '#1f1f1f' }, 'background');
-    const borderColor = useThemeColor({ light: 'rgba(128, 128, 128, 0.2)', dark: 'rgba(128, 128, 128, 0.2)' }, 'icon');
+    const botBubbleColor = useThemeColor({ light: '#f2f2f7', dark: '#1c1c1e' }, 'background');
+    const bubbleBorderColor = useThemeColor({ light: 'rgba(0, 0, 0, 0.05)', dark: 'rgba(255, 255, 255, 0.1)' }, 'icon');
     const textColor = useThemeColor({ light: '#031103', dark: '#fff' }, 'text');
     const userMsgBg = useThemeColor({ light: '#2e632e', dark: '#fff' }, 'tint');
     const botMsgBg = useThemeColor({ light: '#f0f0f0', dark: '#1c1c1e' }, 'background');
@@ -131,16 +131,6 @@ export default function AskScreen() {
 
     return (
         <ThemedView style={styles.container}>
-            {/* Background Decoration */}
-            <View style={styles.backgroundIconContainer} pointerEvents="none">
-                <IconSymbol
-                    name="leaf.fill"
-                    size={320}
-                    color={greenText}
-                    style={{ opacity: 0.1, transform: [{ rotate: '-15deg' }] }}
-                />
-            </View>
-
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.keyboardView}
@@ -162,6 +152,7 @@ export default function AskScreen() {
                                 message.isUser ? styles.userMessage : styles.botMessage,
                                 {
                                     backgroundColor: message.isUser ? userBubbleColor : botBubbleColor,
+                                    borderColor: bubbleBorderColor,
                                     alignSelf: message.isUser ? 'flex-end' : 'flex-start',
                                 },
                             ]}
@@ -241,11 +232,12 @@ const styles = StyleSheet.create({
         padding: 12,
         borderRadius: 16,
         marginBottom: 12,
+        borderWidth: 1,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 2,
     },
     userMessage: {
         alignSelf: 'flex-end',
@@ -285,15 +277,5 @@ const styles = StyleSheet.create({
     sendButton: {
         padding: 10,
         borderRadius: 20,
-    },
-    backgroundIconContainer: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 0,
     },
 });
