@@ -19,8 +19,6 @@ function RootLayoutNav() {
   const inAuthGroup = segments[0] === 'auth';
   const onQuizPage = segments[0] === 'auth' && segments[1] === 'quiz';
 
-  console.log('Auth state:', { loading, hasSession: !!session, tookQuiz, inAuthGroup, onQuizPage });
-
   // Wait for auth to load before making any redirect decisions
   if (loading) {
     return (

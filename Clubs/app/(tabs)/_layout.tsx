@@ -125,7 +125,7 @@ function CustomTabBar({ state, descriptors, navigation, colorScheme }: { state: 
   return (
     <View style={[styles.tabBarContainer, { paddingBottom: insets.bottom > 0 ? insets.bottom : 20 }]}>
       <View style={styles.mainBubble}>
-        {mainRoutes.map(route => renderTab(route, true))}
+        {mainRoutes.map((route: any) => renderTab(route, true))}
       </View>
       {askRoute && (
         <View style={styles.askBubble}>

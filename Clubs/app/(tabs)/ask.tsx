@@ -1,30 +1,36 @@
-import React, { useState, useRef } from 'react';
-import { View, ScrollView, StyleSheet, TextInput, KeyboardAvoidingView, Platform, TouchableOpacity, Text } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, ScrollView, StyleSheet, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { chatWithGemini, ChatMessage } from '@/lib/gemini';
 
-interface Message {
-    id: string;
-    text: string;
-    isUser: boolean;
-    timestamp: Date;
-}
+import { useAuth } from '@/context/AuthContext';
+import { getUserTags } from '@/lib/supabase';
 
 export default function AskScreen() {
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            id: '1',
-            text: "Hi! I can help you find clubs that match your interests. What are you looking for?",
-            isUser: false,
-            timestamp: new Date(),
-        }
+    const { session } = useAuth();
+    const [messages, setMessages] = useState<ChatMessage[]>([
+        { text: "Hi! I can help you find clubs that match your interests. What are you looking for?", isUser: false }
     ]);
-    const [inputText, setInputText] = useState('');
-    const insets = useSafeAreaInsets();
+    const [input, setInput] = useState('');
+    const [isThinking, setIsThinking] = useState(false);
     const scrollViewRef = useRef<ScrollView>(null);
+    const insets = useSafeAreaInsets();
+    const colorScheme = useColorScheme();
+    const [userTags, setUserTags] = useState<string[]>([]);
+    
+    // Prefetch user tags on mount
+    useEffect(() => {
+        if (session?.user?.id) {
+            getUserTags(session.user.id).then(tags => {
+                if (tags) setUserTags(tags);
+            });
+        }
+    }, [session?.user?.id]);
 
     const cardBg = useThemeColor({ light: '#ffffff', dark: '#151718' }, 'background');
     const inputBg = useThemeColor({ light: '#f5f5f5', dark: '#2a2a2a' }, 'background');
@@ -32,29 +38,59 @@ export default function AskScreen() {
     const botBubbleColor = useThemeColor({ light: '#ffffff', dark: '#1f1f1f' }, 'background');
     const borderColor = useThemeColor({ light: 'rgba(128, 128, 128, 0.2)', dark: 'rgba(128, 128, 128, 0.2)' }, 'icon');
     const textColor = useThemeColor({ light: '#031103', dark: '#fff' }, 'text');
+    const userMsgBg = useThemeColor({ light: '#2e632e', dark: '#fff' }, 'tint');
+    const botMsgBg = useThemeColor({ light: '#f0f0f0', dark: '#1c1c1e' }, 'background');
+    const iconColor = useThemeColor({ light: '#687076', dark: '#9BA1A6' }, 'text');
+    const greenText = useThemeColor({ light: '#3c823c', dark: '#3c823c' }, 'tint');
 
-    const handleSend = () => {
-        if (!inputText.trim()) return;
+    const handleSend = async () => {
+        if (!input.trim() || isThinking) return;
 
-        const newMessage: Message = {
-            id: Date.now().toString(),
-            text: inputText,
-            isUser: true,
-            timestamp: new Date(),
-        };
+        const userText = input.trim();
+        setInput('');
+        
+        const userMessage = { text: userText, isUser: true };
+        setMessages(prev => [...prev, userMessage]);
+        setIsThinking(true);
 
-        setMessages((prev) => [...prev, newMessage]);
-        setInputText('');
-
+        // Scroll to bottom
         setTimeout(() => {
-            const botResponse: Message = {
-                id: (Date.now() + 1).toString(),
-                text: "I'm a demo chatbot! In a real implementation, I would analyze your interests and recommend specific clubs.",
-                isUser: false,
-                timestamp: new Date(),
-            };
-            setMessages((prev) => [...prev, botResponse]);
-        }, 800);
+            scrollViewRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+
+        try {
+            const userId = session?.user?.id;
+            console.log("AskScreen: handleSend called. UserId:", userId); // DEBUG LOG
+            console.log("AskScreen: Current userTags state:", userTags); // DEBUG LOG
+            
+            // Critical optimization: Ensure we have tags BEFORE calling Gemini
+            // This prevents the AI from falling back to a slow 2-step process
+            let currentTags = userTags;
+            if (userId && currentTags.length === 0) {
+                 console.log("AskScreen: Tags missing, fetching now..."); // DEBUG LOG
+                 const fetchedTags = await getUserTags(userId);
+                 console.log("AskScreen: Fetched tags:", fetchedTags); // DEBUG LOG
+                 if (fetchedTags && fetchedTags.length > 0) {
+                     currentTags = fetchedTags;
+                     setUserTags(fetchedTags); // Update state for next time
+                 }
+            } else {
+                 console.log("AskScreen: Using existing tags:", currentTags); // DEBUG LOG
+            }
+            
+            const responseText = await chatWithGemini(messages, userText, userId, currentTags);
+            const botMessage = { text: responseText, isUser: false };
+            setMessages(prev => [...prev, botMessage]);
+        } catch (error: any) {
+            console.error("AskScreen Error:", error);
+            const errorMessage = error?.message || "Unknown error";
+            setMessages(prev => [...prev, { text: `Sorry, I encountered an error: ${errorMessage}. Please try again.`, isUser: false }]);
+        } finally {
+            setIsThinking(false);
+            setTimeout(() => {
+                scrollViewRef.current?.scrollToEnd({ animated: true });
+            }, 100);
+        }
     };
 
     return (
@@ -66,17 +102,18 @@ export default function AskScreen() {
             >
                 <ScrollView
                     ref={scrollViewRef}
+
                     contentContainerStyle={styles.messagesContainer}
                     keyboardShouldPersistTaps="handled"
                     onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
                 >
                     <ThemedText type="title" style={styles.title}>Ask</ThemedText>
-                    {messages.map((message) => (
+                    {messages.map((message, index) => (
                         <View
-                            key={message.id}
+                            key={index}
                             style={[
                                 styles.messageBubble,
-                                message.isUser ? styles.userBubble : styles.botBubble,
+                                message.isUser ? styles.userMessage : styles.botMessage,
                                 {
                                     backgroundColor: message.isUser ? userBubbleColor : botBubbleColor,
                                     alignSelf: message.isUser ? 'flex-end' : 'flex-start',
@@ -86,49 +123,49 @@ export default function AskScreen() {
                             <ThemedText
                                 style={[
                                     styles.messageText,
-                                    { color: message.isUser ? '#ffffff' : undefined },
+                                    { color: message.isUser ? '#ffffff' : textColor },
                                 ]}
                             >
                                 {message.text}
                             </ThemedText>
-                            <Text style={[styles.timestamp, { color: message.isUser ? 'rgba(255,255,255,0.7)' : '#9ca3af' }]}>
-                                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </Text>
                         </View>
                     ))}
+                    
+                    {isThinking && (
+                        <View style={[styles.messageBubble, styles.botMessage, { backgroundColor: botMsgBg }]}>
+                             <ActivityIndicator size="small" color={textColor} />
+                        </View>
+                    )}
                 </ScrollView>
 
                 <View style={[
-                    styles.inputContainer,
+                    styles.inputWrapper,
                     {
                         backgroundColor: cardBg,
-                        borderTopColor: borderColor,
-                        paddingBottom: Math.max(insets.bottom, 20) + 70 // Clear the floating tabs
+                        paddingBottom: Math.max(insets.bottom, 20) + 70 
                     }
                 ]}>
-                    <View style={[styles.inputWrapper, { backgroundColor: inputBg, borderColor: borderColor }]}>
+                    <View style={[styles.inputContainer, { backgroundColor: inputBg }]}>
                         <TextInput
                             style={[styles.input, { color: textColor }]}
+                            value={input}
+                            onChangeText={setInput}
                             placeholder="Ask about clubs..."
                             placeholderTextColor={textColor + '80'}
-                            value={inputText}
-                            onChangeText={setInputText}
-                            multiline
-                            maxLength={500}
                             onSubmitEditing={handleSend}
+                            returnKeyType="send"
+                            editable={!isThinking}
                         />
-                        <TouchableOpacity
-                            style={[
-                                styles.sendButton,
-                                {
-                                    backgroundColor: inputText.trim() ? userBubbleColor : '#d1d5db',
-                                    opacity: inputText.trim() ? 1 : 0.5,
-                                }
-                            ]}
-                            onPress={handleSend}
-                            disabled={!inputText.trim()}
+                        <TouchableOpacity 
+                            onPress={handleSend} 
+                            disabled={!input.trim() || isThinking}
+                            style={styles.sendButton}
                         >
-                            <IconSymbol name="arrow.up" size={20} color="#ffffff" />
+                            <IconSymbol 
+                                name="paperplane.fill" 
+                                size={20} 
+                                color={input.trim() && !isThinking ? greenText : iconColor} 
+                            />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -148,6 +185,7 @@ const styles = StyleSheet.create({
         padding: 16,
         paddingTop: 60,
         paddingBottom: 20,
+        flexGrow: 1,
     },
     title: {
         marginBottom: 16,
@@ -163,10 +201,12 @@ const styles = StyleSheet.create({
         shadowRadius: 2,
         elevation: 1,
     },
-    userBubble: {
+    userMessage: {
+        alignSelf: 'flex-end',
         borderBottomRightRadius: 4,
     },
-    botBubble: {
+    botMessage: {
+        alignSelf: 'flex-start',
         borderBottomLeftRadius: 4,
     },
     messageText: {
@@ -178,30 +218,26 @@ const styles = StyleSheet.create({
         fontSize: 11,
         marginTop: 4,
     },
-    inputContainer: {
+    inputWrapper: {
         padding: 16,
         borderTopWidth: 1,
+        borderTopColor: 'rgba(128, 128, 128, 0.2)',
     },
-    inputWrapper: {
+    inputContainer: {
         flexDirection: 'row',
-        alignItems: 'flex-end',
-        borderWidth: 1,
+        alignItems: 'center',
+        padding: 4,
+        paddingLeft: 12,
         borderRadius: 24,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
     },
     input: {
         flex: 1,
+        paddingVertical: 10,
         fontSize: 15,
-        maxHeight: 100,
-        paddingVertical: 8,
+        minHeight: 40,
     },
     sendButton: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginLeft: 8,
+        padding: 10,
+        borderRadius: 20,
     },
 });

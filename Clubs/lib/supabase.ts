@@ -17,6 +17,16 @@ export async function getClubs() {
     return data;
 }
 
+export async function getUserTags(userId: string) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('preference_tags')
+    .eq('user_id', userId)
+    .single();
+  if (error) console.error("Error:", error);
+  return data?.preference_tags;
+}
+
 // Example: Fetch events
 export async function getEvents() {
     const { data, error } = await supabase.from('events').select('*');
