@@ -182,7 +182,7 @@ export default function ClubDetailScreen() {
         <ThemedView style={styles.container}>
             <Stack.Screen
                 options={{
-                    title: "Clubs",
+                    title: "Clubbs",
                     headerBackTitle: "Back", // Removes "(tabs)" which is the default for nested routes
                 }}
             />
