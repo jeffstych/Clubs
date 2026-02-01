@@ -1,5 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
-import { StyleSheet, ScrollView, TouchableOpacity, FlatList, View, TextInput, Pressable } from 'react-native';
+import { StyleSheet, ScrollView, TouchableOpacity, FlatList, View, TextInput, Pressable, Modal } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { ClubCard } from '@/components/club-card';
@@ -32,6 +31,9 @@ export default function ExploreScreen() {
   const inputBgColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.03)', dark: 'rgba(255, 255, 255, 0.05)' }, 'background');
   const borderColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.1)', dark: 'rgba(255, 255, 255, 0.2)' }, 'icon');
   const searchTextColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
+  const tintColor = useThemeColor({ light: '#3c823c', dark: '#fff' }, 'tint');
+  const menuBg = useThemeColor({ light: '#fff', dark: '#2c2c2e' }, 'background');
+  const menuBorderColor = useThemeColor({ light: '#e5e5e5', dark: '#48484a' }, 'icon');
 
   // Load user preferences on mount
   useEffect(() => {
@@ -66,7 +68,7 @@ export default function ExploreScreen() {
           // Add any other fields that ClubCard expects
         }));
         setClubs(transformedClubs);
-        
+
         // Extract unique categories
         const uniqueCategories = [...new Set(
           clubsData
@@ -84,7 +86,7 @@ export default function ExploreScreen() {
 
   const loadUserPreferences = async () => {
     if (!session?.user?.id) return;
-    
+
     try {
       const { data: prefsData } = await getUserPreferenceTags(session.user.id);
       if (prefsData) {
@@ -99,7 +101,7 @@ export default function ExploreScreen() {
 
   // Get all available tags from Supabase
   const [allTags, setAllTags] = useState<string[]>([]);
-  
+
   useEffect(() => {
     loadAllTags();
   }, []);
@@ -227,121 +229,114 @@ export default function ExploreScreen() {
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => <ClubCard club={item} key={`${item.id}-${refreshTrigger}`} />}
           contentContainerStyle={styles.contentContainer}
-        ListHeaderComponent={
-          <>
-            <ThemedView style={styles.header}>
-              <ThemedText type="title">Explore</ThemedText>
-              <ThemedText style={styles.subtitle}>
-                Select your interests to get personalized club recommendations.
-              </ThemedText>
-            </ThemedView>
-
-            {/* Search Bar */}
-            <View style={[styles.searchContainer, { backgroundColor: inputBgColor }]}>
-              <IconSymbol name="magnifyingglass" size={20} color={inactiveTagColor} />
-              <TextInput
-                style={[styles.searchInput, { color: searchTextColor }]}
-                placeholder="Search clubs..."
-                placeholderTextColor={inactiveTagColor}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
-            </View>
-
-            {/* Controls Section */}
-            <View style={styles.controlsSection}>
-              {/* Sort Dropdown */}
-              <Pressable
-                style={[
-                  styles.dropdownButton,
-                  { borderColor: borderColor, backgroundColor: inputBgColor }
-                ]}
-                onPress={() => setShowSortDropdown(!showSortDropdown)}
-              >
-                <ThemedText style={styles.dropdownButtonText}>
-                  Sort: {sortBy === 'name' ? 'A-Z' : sortBy === 'category' ? 'Category' : 'Default'}
+          ListHeaderComponent={
+            <>
+              <ThemedView style={styles.header}>
+                <View style={styles.headerTitleRow}>
+                  <ThemedText type="title">Explore</ThemedText>
+                  <TouchableOpacity
+                    onPress={() => setShowSortDropdown(!showSortDropdown)}
+                    style={styles.sortButton}
+                  >
+                    <IconSymbol name="line.3.horizontal" size={24} color={tintColor} />
+                  </TouchableOpacity>
+                </View>
+                <ThemedText style={styles.subtitle}>
+                  Select your interests to get personalized club recommendations.
                 </ThemedText>
-                <IconSymbol
-                  name={showSortDropdown ? "chevron.up" : "chevron.down"}
-                  size={16}
-                  color={inactiveTagColor}
-                />
-              </Pressable>
+              </ThemedView>
 
               {showSortDropdown && (
-                <View style={[styles.dropdownMenu, { backgroundColor: inputBgColor, borderColor }]}>
+                <Modal
+                  transparent={true}
+                  visible={showSortDropdown}
+                  onRequestClose={() => setShowSortDropdown(false)}
+                  animationType="none"
+                >
                   <Pressable
-                    style={[styles.dropdownItem, sortBy === 'default' && styles.dropdownItemSelected]}
-                    onPress={() => {
-                      setSortBy('default');
-                      setShowSortDropdown(false);
-                    }}
+                    style={styles.modalOverlay}
+                    onPress={() => setShowSortDropdown(false)}
                   >
-                    <ThemedText>Default</ThemedText>
+                    <View style={[styles.dropdownMenu, { backgroundColor: menuBg, borderColor: menuBorderColor }]}>
+                      <TouchableOpacity
+                        style={styles.dropdownItem}
+                        onPress={() => { setSortBy('default'); setShowSortDropdown(false); }}
+                      >
+                        <ThemedText style={{ color: sortBy === 'default' ? tintColor : undefined }}>Default</ThemedText>
+                        {sortBy === 'default' && <IconSymbol name="checkmark" size={16} color={tintColor} />}
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.dropdownItem}
+                        onPress={() => { setSortBy('name'); setShowSortDropdown(false); }}
+                      >
+                        <ThemedText style={{ color: sortBy === 'name' ? tintColor : undefined }}>A-Z</ThemedText>
+                        {sortBy === 'name' && <IconSymbol name="checkmark" size={16} color={tintColor} />}
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.dropdownItem}
+                        onPress={() => { setSortBy('category'); setShowSortDropdown(false); }}
+                      >
+                        <ThemedText style={{ color: sortBy === 'category' ? tintColor : undefined }}>Category</ThemedText>
+                        {sortBy === 'category' && <IconSymbol name="checkmark" size={16} color={tintColor} />}
+                      </TouchableOpacity>
+                    </View>
                   </Pressable>
-                  <Pressable
-                    style={[styles.dropdownItem, sortBy === 'name' && styles.dropdownItemSelected]}
-                    onPress={() => {
-                      setSortBy('name');
-                      setShowSortDropdown(false);
-                    }}
-                  >
-                    <ThemedText>A-Z</ThemedText>
-                  </Pressable>
-                  <Pressable
-                    style={[styles.dropdownItem, sortBy === 'category' && styles.dropdownItemSelected]}
-                    onPress={() => {
-                      setSortBy('category');
-                      setShowSortDropdown(false);
-                    }}
-                  >
-                    <ThemedText>Category</ThemedText>
-                  </Pressable>
-                </View>
+                </Modal>
               )}
-            </View>
 
-            {/* Categories Section */}
-            <View style={styles.categoriesSection}>
-              <ThemedText type="defaultSemiBold" style={styles.filterLabel}>Categories</ThemedText>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tagsScroll}>
-                {categories.map((category) => {
-                  const isActive = selectedCategories.includes(category);
-                  return (
-                    <TouchableOpacity
-                      key={category}
-                      style={[
-                        styles.categoryButton,
-                        { 
-                          backgroundColor: isActive ? activeBgColor : inactiveBgColor,
-                          borderColor: isActive ? activeBgColor : borderColor,
-                        },
-                      ]}
-                      onPress={() => toggleCategory(category)}>
-                      <ThemedText
+              {/* Search Bar */}
+              <View style={[styles.searchContainer, { backgroundColor: inputBgColor }]}>
+                <IconSymbol name="magnifyingglass" size={20} color={inactiveTagColor} />
+                <TextInput
+                  style={[styles.searchInput, { color: searchTextColor }]}
+                  placeholder="Search clubs..."
+                  placeholderTextColor={inactiveTagColor}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+              </View>
+
+              {/* Categories Section */}
+              <View style={styles.categoriesSection}>
+                <ThemedText type="defaultSemiBold" style={styles.filterLabel}>Categories</ThemedText>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tagsScroll}>
+                  {categories.map((category) => {
+                    const isActive = selectedCategories.includes(category);
+                    return (
+                      <TouchableOpacity
+                        key={category}
                         style={[
-                          styles.categoryText,
-                          { color: isActive ? activeTagColor : inactiveTagColor, fontWeight: isActive ? '600' : '400' },
-                        ]}>
-                        {category}
-                      </ThemedText>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            </View>
+                          styles.categoryButton,
+                          {
+                            backgroundColor: isActive ? activeBgColor : inactiveBgColor,
+                            borderColor: isActive ? activeBgColor : borderColor,
+                          },
+                        ]}
+                        onPress={() => toggleCategory(category)}>
+                        <ThemedText
+                          style={[
+                            styles.categoryText,
+                            { color: isActive ? activeTagColor : inactiveTagColor, fontWeight: isActive ? '600' : '400' },
+                          ]}>
+                          {category}
+                        </ThemedText>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
 
-            <ThemedText type="subtitle" style={styles.sectionTitle}>
-              {(selectedTags.length > 0 || selectedCategories.length > 0)
-                ? "Filtered Clubs" 
-                : userPreferences.length > 0 
-                  ? "Recommended for You" 
-                  : "All Clubs"
-              }
-            </ThemedText>
-          </>
-        }
-      />
+              <ThemedText type="subtitle" style={styles.sectionTitle}>
+                {(selectedTags.length > 0 || selectedCategories.length > 0)
+                  ? "Filtered Clubs"
+                  : userPreferences.length > 0
+                    ? "Recommended for You"
+                    : "All Clubs"
+                }
+              </ThemedText>
+            </>
+          }
+        />
       )}
     </ThemedView>
   );
@@ -364,6 +359,14 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 16,
   },
+  headerTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sortButton: {
+    padding: 4,
+  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -377,36 +380,31 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 16,
   },
-  controlsSection: {
-    marginBottom: 20,
-    zIndex: 10, // Ensure dropdown flows over other elements if absolute (but we are using stacking flow)
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'transparent',
   },
-  dropdownButton: {
+  dropdownMenu: {
+    position: 'absolute',
+    top: 105,
+    right: 16,
+    width: 150,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+    zIndex: 1000,
+  },
+  dropdownItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  dropdownButtonText: {
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  dropdownMenu: {
-    marginTop: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  dropdownItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#ccc',
-  },
-  dropdownItemSelected: {
-    backgroundColor: 'rgba(60, 130, 60, 0.1)', // Lighter green tint
+    paddingVertical: 10,
+    paddingHorizontal: 12,
   },
   subtitle: {
     marginTop: 8,
