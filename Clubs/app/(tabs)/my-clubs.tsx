@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, View, TouchableOpacity, ActionSheetIOS } from 'react-native';
+import { ScrollView, StyleSheet, View, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 import { ClubCard } from '@/components/club-card';
@@ -13,9 +13,13 @@ export default function MyClubsScreen() {
     const { session } = useAuth();
     const [followedClubs, setFollowedClubs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [sortBy, setSortBy] = useState<'latest' | 'alphabetical'>('latest');
+    const [sortBy, setSortBy] = useState<'default' | 'latest' | 'alphabetical'>('default');
+    const [showSortMenu, setShowSortMenu] = useState(false);
 
     const tintColor = useThemeColor({ light: '#3c823c', dark: '#fff' }, 'tint');
+    const menuBg = useThemeColor({ light: '#fff', dark: '#1c1c1e' }, 'background');
+    const borderColor = useThemeColor({ light: '#e5e5e5', dark: '#38383a' }, 'icon');
+    const secondaryTextColor = useThemeColor({ light: '#666', dark: '#8E8E93' }, 'text');
 
     // Load clubs when the component mounts
     useEffect(() => {
@@ -63,25 +67,18 @@ export default function MyClubsScreen() {
     };
 
     const handleSort = () => {
-        ActionSheetIOS.showActionSheetWithOptions(
-            {
-                options: ['Cancel', 'Latest', 'A-Z'],
-                cancelButtonIndex: 0,
-                title: 'Sort Clubs',
-            },
-            (buttonIndex) => {
-                if (buttonIndex === 1) setSortBy('latest');
-                else if (buttonIndex === 2) setSortBy('alphabetical');
-            }
-        );
+        setShowSortMenu(!showSortMenu);
     };
 
     const sortedClubs = [...followedClubs].sort((a, b) => {
         if (sortBy === 'alphabetical') {
             return a.name.localeCompare(b.name);
         }
-        // For latest, we assume higher followedAt (or index if not available) is newer
-        return new Date(b.followedAt).getTime() - new Date(a.followedAt).getTime();
+        if (sortBy === 'latest') {
+            return new Date(b.followedAt).getTime() - new Date(a.followedAt).getTime();
+        }
+        // Default: original order from database
+        return 0;
     });
 
     return (
@@ -93,6 +90,44 @@ export default function MyClubsScreen() {
                         <IconSymbol name="line.3.horizontal" size={24} color={tintColor} />
                     </TouchableOpacity>
                 </View>
+
+                {showSortMenu && (
+                    <Modal
+                        transparent={true}
+                        visible={showSortMenu}
+                        onRequestClose={() => setShowSortMenu(false)}
+                        animationType="none"
+                    >
+                        <Pressable
+                            style={styles.modalOverlay}
+                            onPress={() => setShowSortMenu(false)}
+                        >
+                            <View style={[styles.dropdown, { backgroundColor: menuBg, borderColor }]}>
+                                <TouchableOpacity
+                                    style={styles.menuOption}
+                                    onPress={() => { setSortBy('default'); setShowSortMenu(false); }}
+                                >
+                                    <ThemedText style={{ color: sortBy === 'default' ? tintColor : undefined }}>Default</ThemedText>
+                                    {sortBy === 'default' && <IconSymbol name="checkmark" size={16} color={tintColor} />}
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.menuOption}
+                                    onPress={() => { setSortBy('latest'); setShowSortMenu(false); }}
+                                >
+                                    <ThemedText style={{ color: sortBy === 'latest' ? tintColor : undefined }}>Latest</ThemedText>
+                                    {sortBy === 'latest' && <IconSymbol name="checkmark" size={16} color={tintColor} />}
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.menuOption}
+                                    onPress={() => { setSortBy('alphabetical'); setShowSortMenu(false); }}
+                                >
+                                    <ThemedText style={{ color: sortBy === 'alphabetical' ? tintColor : undefined }}>A-Z</ThemedText>
+                                    {sortBy === 'alphabetical' && <IconSymbol name="checkmark" size={16} color={tintColor} />}
+                                </TouchableOpacity>
+                            </View>
+                        </Pressable>
+                    </Modal>
+                )}
 
                 {loading ? (
                     <ThemedText style={styles.subtitle}>
@@ -145,5 +180,30 @@ const styles = StyleSheet.create({
     },
     clubsList: {
         gap: 16,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'transparent',
+    },
+    dropdown: {
+        position: 'absolute',
+        top: 105,
+        right: 16,
+        width: 150,
+        borderRadius: 12,
+        borderWidth: 1,
+        padding: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 5,
+    },
+    menuOption: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: 12,
     },
 });
