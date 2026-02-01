@@ -45,7 +45,7 @@ Campus life is enriched by student organizations, but many students struggle to 
 
 1. Clone the repository
 ```bash
-git clone https://github.com/jeffstych/Clubs.git
+git clone https://github.com/jeffstych/Clubbs.git
 cd Clubs
 ```
 
