@@ -11,7 +11,7 @@ import { ThemedText } from '@/components/themed-text';
 
 export const unstable_settings = {
   anchor: '(tabs)',
-  initialRouteName: 'explore',
+  initialRouteName: 'index',
 };
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -24,7 +24,7 @@ export default function TabLayout() {
         headerShown: false,
       }}>
       <Tabs.Screen
-        name="explore"
+        name="index"
         options={{
           title: 'Explore',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="globe" color={color} />,
@@ -58,15 +58,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="message" color={color} />,
         }}
       />
-<<<<<<< HEAD
-=======
-      <Tabs.Screen
-        name="index"
-        options={{
-          href: null,
-        }}
-      />
->>>>>>> main
     </Tabs>
 
   );
@@ -79,7 +70,7 @@ function CustomTabBar({ state, descriptors, navigation, colorScheme }: { state: 
 
   // Define icons mapping for safety
   const iconMap: Record<string, string> = {
-    'explore': 'globe',
+    'index': 'globe',
     'my-clubs': 'list.bullet',
     'calendar': 'calendar',
     'profile': 'person.fill',
@@ -91,8 +82,7 @@ function CustomTabBar({ state, descriptors, navigation, colorScheme }: { state: 
     return options.href !== null;
   });
 
-  const mainRoutes = visibleRoutes.filter((r: any) => r.name !== 'ask');
-  const askRoute = visibleRoutes.find((r: any) => r.name === 'ask');
+  const mainRoutes = visibleRoutes;
 
   const renderTab = (route: any, isMain: boolean) => {
     const { options } = descriptors[route.key];
@@ -115,7 +105,7 @@ function CustomTabBar({ state, descriptors, navigation, colorScheme }: { state: 
       <TouchableOpacity
         key={route.key}
         onPress={onPress}
-        style={[styles.tabItem, !isMain && styles.askTabItem]}
+        style={styles.tabItem}
         activeOpacity={0.7}
       >
         <IconSymbol
@@ -133,13 +123,8 @@ function CustomTabBar({ state, descriptors, navigation, colorScheme }: { state: 
   return (
     <View style={[styles.tabBarContainer, { paddingBottom: insets.bottom > 0 ? insets.bottom : 20 }]}>
       <View style={styles.mainBubble}>
-        {mainRoutes.map(route => renderTab(route, true))}
+        {mainRoutes.map((route: any) => renderTab(route, true))}
       </View>
-      {askRoute && (
-        <View style={styles.askBubble}>
-          {renderTab(askRoute, false)}
-        </View>
-      )}
     </View>
   );
 }
@@ -159,32 +144,11 @@ const styles = StyleSheet.create({
   },
   mainBubble: {
     flexDirection: 'row',
-<<<<<<< HEAD
-    backgroundColor: 'rgba(20, 22, 23, 0.7)',
-=======
     backgroundColor: 'rgba(20, 22, 23, 0.9)',
->>>>>>> main
     borderRadius: 35,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    marginRight: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  askBubble: {
-<<<<<<< HEAD
-    backgroundColor: 'rgba(20, 22, 23, 0.7)',
-=======
-    backgroundColor: 'rgba(20, 22, 23, 0.9)',
->>>>>>> main
-    borderRadius: 35,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    marginRight: 0,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
     shadowColor: '#000',
@@ -196,12 +160,8 @@ const styles = StyleSheet.create({
   tabItem: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 12,
-    minWidth: 70,
-  },
-  askTabItem: {
-    minWidth: 60,
-    paddingHorizontal: 5,
+    paddingHorizontal: 8,
+    minWidth: 64,
   },
   tabLabel: {
     fontSize: 10,

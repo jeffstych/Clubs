@@ -22,6 +22,13 @@ const MAPPING = {
   'magnifyingglass': 'search',
   'line.3.horizontal.decrease.circle': 'filter-list',
   'chevron.down': 'expand-more',
+  'message.fill': 'chat',
+  'message': 'chat-bubble',
+  'list.bullet': 'format-list-bulleted',
+  'calendar': 'calendar-today',
+  'person.fill': 'person',
+  'gearshape.fill': 'settings',
+  'rectangle.portrait.and.arrow.right': 'logout',
 } as IconMapping;
 
 /**
