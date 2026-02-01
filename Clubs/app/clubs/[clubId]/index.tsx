@@ -1,159 +1,126 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
-import { useState, useMemo } from 'react';
-import { CLUBS } from '@/data/clubs';
+import { useState, useRef } from 'react';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 
-export default function ClubDetailPage() {
-    const { clubId } = useLocalSearchParams();
-    const [isFollowing, setIsFollowing] = useState(false);
+interface Message {
+    id: string;
+    text: string;
+    isUser: boolean;
+    timestamp: Date;
+}
 
-    // Find the club from the data
-    const club = useMemo(() => {
-        return CLUBS.find(c => c.id === clubId);
-    }, [clubId]);
+export default function ClubChatPage() {
+    const { clubId } = useLocalSearchParams();
+    const [messages, setMessages] = useState<Message[]>([
+        {
+            id: '1',
+            text: `Hello! I'm here to help you learn about this club. What would you like to know?`,
+            isUser: false,
+            timestamp: new Date(),
+        },
+    ]);
+    const [inputText, setInputText] = useState('');
+    const scrollViewRef = useRef<ScrollView>(null);
 
     const bgColor = useThemeColor({ light: '#f9fafb', dark: '#0a0a0a' }, 'background');
-    const cardBg = useThemeColor({ light: '#ffffff', dark: '#151718' }, 'background');
-    const accentColor = useThemeColor({ light: '#3c823c', dark: '#fff' }, 'tint');
-    const tagBg = useThemeColor({ light: 'rgba(6, 36, 6, 0.08)', dark: 'rgba(255, 255, 255, 0.1)' }, 'background');
-    const tagBorder = useThemeColor({ light: 'rgba(6, 36, 6, 0.15)', dark: 'rgba(255, 255, 255, 0.2)' }, 'icon');
-    const eventBg = useThemeColor({ light: 'rgba(60, 130, 60, 0.1)', dark: 'rgba(255, 255, 255, 0.1)' }, 'background');
+    const userBubbleColor = useThemeColor({ light: '#3c823c', dark: '#3c823c' }, 'tint');
+    const botBubbleColor = useThemeColor({ light: '#ffffff', dark: '#1f1f1f' }, 'background');
+    const inputBgColor = useThemeColor({ light: '#ffffff', dark: '#1f1f1f' }, 'background');
+    const borderColor = useThemeColor({ light: '#e5e7eb', dark: '#2f2f2f' }, 'icon');
 
-    if (!club) {
-        return (
-            <ThemedView style={styles.container}>
-                <Stack.Screen options={{ title: 'Club Not Found' }} />
-                <View style={styles.errorContainer}>
-                    <ThemedText style={styles.errorText}>Club not found</ThemedText>
-                </View>
-            </ThemedView>
-        );
-    }
+    const handleSend = () => {
+        if (!inputText.trim()) return;
+
+        const newMessage: Message = {
+            id: Date.now().toString(),
+            text: inputText,
+            isUser: true,
+            timestamp: new Date(),
+        };
+
+        setMessages((prev) => [...prev, newMessage]);
+        setInputText('');
+
+        // Simulate bot response
+        setTimeout(() => {
+            const botResponse: Message = {
+                id: (Date.now() + 1).toString(),
+                text: "I'm a demo bot! In a real implementation, I would answer your questions about the club.",
+                isUser: false,
+                timestamp: new Date(),
+            };
+            setMessages((prev) => [...prev, botResponse]);
+        }, 1000);
+    };
 
     return (
         <>
-            <Stack.Screen options={{ title: club.name }} />
-            <ScrollView style={[styles.container, { backgroundColor: bgColor }]}>
-                {/* Hero Image */}
-                <Image source={{ uri: club.image }} style={styles.heroImage} />
-
-                {/* Club Info Card */}
-                <ThemedView style={[styles.infoCard, { backgroundColor: cardBg }]}>
-                    <View style={styles.header}>
-                        <View style={styles.headerText}>
-                            <ThemedText type="title">{club.name}</ThemedText>
-                            <ThemedText style={styles.category}>{club.category}</ThemedText>
-                        </View>
-                        <TouchableOpacity
+            <Stack.Screen options={{ title: 'Club Assistant' }} />
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={[styles.container, { backgroundColor: bgColor }]}
+                keyboardVerticalOffset={90}
+            >
+                {/* Chat Messages */}
+                <ScrollView
+                    ref={scrollViewRef}
+                    style={styles.messagesContainer}
+                    contentContainerStyle={styles.messagesContent}
+                    onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+                >
+                    {messages.map((message) => (
+                        <View
+                            key={message.id}
                             style={[
-                                styles.followButton,
+                                styles.messageBubble,
+                                message.isUser ? styles.userBubble : styles.botBubble,
                                 {
-                                    backgroundColor: isFollowing ? 'transparent' : accentColor,
-                                    borderColor: accentColor,
-                                    borderWidth: 1,
+                                    backgroundColor: message.isUser ? userBubbleColor : botBubbleColor,
+                                    alignSelf: message.isUser ? 'flex-end' : 'flex-start',
                                 },
                             ]}
-                            onPress={() => setIsFollowing(!isFollowing)}
                         >
                             <ThemedText
                                 style={[
-                                    styles.followButtonText,
-                                    { color: isFollowing ? accentColor : '#fff' },
+                                    styles.messageText,
+                                    { color: message.isUser ? '#ffffff' : undefined },
                                 ]}
                             >
-                                {isFollowing ? 'Following' : 'Follow'}
+                                {message.text}
                             </ThemedText>
+                            <Text style={[styles.timestamp, { color: message.isUser ? 'rgba(255,255,255,0.7)' : '#9ca3af' }]}>
+                                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </Text>
+                        </View>
+                    ))}
+                </ScrollView>
+
+                {/* Input Area */}
+                <View style={[styles.inputContainer, { backgroundColor: bgColor, borderTopColor: borderColor }]}>
+                    <View style={[styles.inputWrapper, { backgroundColor: inputBgColor, borderColor: borderColor }]}>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Ask me anything about this club..."
+                            value={inputText}
+                            onChangeText={setInputText}
+                            multiline
+                            maxLength={500}
+                            onSubmitEditing={handleSend}
+                        />
+                        <TouchableOpacity
+                            style={[styles.sendButton, { backgroundColor: userBubbleColor }]}
+                            onPress={handleSend}
+                            disabled={!inputText.trim()}
+                        >
+                            <IconSymbol name="arrow.up" size={20} color="#ffffff" />
                         </TouchableOpacity>
                     </View>
-
-                    <ThemedText style={styles.description}>{club.description}</ThemedText>
-
-                    {/* Tags */}
-                    {club.tags && club.tags.length > 0 && (
-                        <View style={styles.tagsContainer}>
-                            {club.tags.map((tag) => (
-                                <View
-                                    key={tag}
-                                    style={[
-                                        styles.tag,
-                                        { backgroundColor: tagBg, borderColor: tagBorder, borderWidth: 1 },
-                                    ]}
-                                >
-                                    <ThemedText style={styles.tagText}>#{tag}</ThemedText>
-                                </View>
-                            ))}
-                        </View>
-                    )}
-                </ThemedView>
-
-                {/* Connect Section */}
-                <ThemedView style={[styles.section, { backgroundColor: cardBg }]}>
-                    <View style={styles.sectionHeader}>
-                        <IconSymbol name="link" size={20} color={accentColor} />
-                        <ThemedText type="subtitle" style={styles.sectionTitle}>
-                            Connect With Us
-                        </ThemedText>
-                    </View>
-
-                    {/* Discord Link */}
-                    <TouchableOpacity style={[styles.linkButton, { backgroundColor: eventBg }]}>
-                        <IconSymbol name="bubble.left.and.bubble.right" size={20} color={accentColor} />
-                        <View style={styles.linkContent}>
-                            <ThemedText style={styles.linkTitle}>Join our Discord</ThemedText>
-                            <ThemedText style={styles.linkSubtitle}>Chat with members & get updates</ThemedText>
-                        </View>
-                        <IconSymbol name="chevron.right" size={16} color={accentColor} />
-                    </TouchableOpacity>
-
-                    {/* Email Link */}
-                    <TouchableOpacity style={[styles.linkButton, { backgroundColor: eventBg }]}>
-                        <IconSymbol name="envelope.fill" size={20} color={accentColor} />
-                        <View style={styles.linkContent}>
-                            <ThemedText style={styles.linkTitle}>Email Us</ThemedText>
-                            <ThemedText style={styles.linkSubtitle}>contact@{club.name.toLowerCase().replace(/\s+/g, '')}.club</ThemedText>
-                        </View>
-                        <IconSymbol name="chevron.right" size={16} color={accentColor} />
-                    </TouchableOpacity>
-                </ThemedView>
-
-                {/* Next Event Section */}
-                {club.nextEvent && (
-                    <ThemedView style={[styles.section, { backgroundColor: cardBg }]}>
-                        <View style={styles.sectionHeader}>
-                            <IconSymbol name="calendar" size={20} color={accentColor} />
-                            <ThemedText type="subtitle" style={styles.sectionTitle}>
-                                Next Meeting
-                            </ThemedText>
-                        </View>
-                        <View style={[styles.eventCard, { backgroundColor: eventBg }]}>
-                            <IconSymbol name="clock" size={16} color={accentColor} style={styles.eventIcon} />
-                            <View style={styles.eventDetails}>
-                                <ThemedText style={styles.eventTime}>{club.nextEvent.time}</ThemedText>
-                                <ThemedText style={styles.eventLocation}>{club.nextEvent.location}</ThemedText>
-                            </View>
-                        </View>
-                    </ThemedView>
-                )}
-
-                {/* About Section */}
-                <ThemedView style={[styles.section, { backgroundColor: cardBg }]}>
-                    <View style={styles.sectionHeader}>
-                        <IconSymbol name="info.circle" size={20} color={accentColor} />
-                        <ThemedText type="subtitle" style={styles.sectionTitle}>
-                            About
-                        </ThemedText>
-                    </View>
-                    <ThemedText style={styles.aboutText}>
-                        Join our community and be part of something amazing! We welcome members of all
-                        skill levels and backgrounds. Whether you're a beginner or an expert, there's a
-                        place for you here.
-                    </ThemedText>
-                </ThemedView>
-            </ScrollView>
+                </View>
+            </KeyboardAvoidingView>
         </>
     );
 }
@@ -162,140 +129,64 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
-    errorContainer: {
+    messagesContainer: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
     },
-    errorText: {
-        fontSize: 16,
-        opacity: 0.7,
+    messagesContent: {
+        padding: 16,
+        paddingBottom: 8,
     },
-    heroImage: {
-        width: '100%',
-        height: 250,
-        backgroundColor: '#e5e7eb',
-    },
-    infoCard: {
-        margin: 16,
-        marginTop: -30,
-        padding: 20,
-        borderRadius: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: 12,
-    },
-    headerText: {
-        flex: 1,
-        marginRight: 12,
-    },
-    category: {
-        fontSize: 14,
-        opacity: 0.6,
-        marginTop: 4,
-    },
-    followButton: {
-        paddingHorizontal: 20,
-        paddingVertical: 10,
-        borderRadius: 20,
-    },
-    followButtonText: {
-        fontSize: 14,
-        fontWeight: '600',
-    },
-    description: {
-        fontSize: 16,
-        lineHeight: 24,
-        marginBottom: 16,
-        opacity: 0.9,
-    },
-    tagsContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 8,
-        marginTop: 8,
-    },
-    tag: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 12,
-    },
-    tagText: {
-        fontSize: 12,
-        fontWeight: '500',
-    },
-    section: {
-        margin: 16,
-        marginTop: 0,
-        padding: 20,
-        borderRadius: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    sectionHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    sectionTitle: {
-        marginLeft: 8,
-    },
-    eventCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    messageBubble: {
+        maxWidth: '80%',
         padding: 12,
-        borderRadius: 12,
+        borderRadius: 16,
+        marginBottom: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 1,
     },
-    eventIcon: {
-        marginRight: 12,
+    userBubble: {
+        borderBottomRightRadius: 4,
     },
-    eventDetails: {
-        flex: 1,
+    botBubble: {
+        borderBottomLeftRadius: 4,
     },
-    eventTime: {
+    messageText: {
         fontSize: 15,
-        fontWeight: '600',
+        lineHeight: 20,
         marginBottom: 4,
     },
-    eventLocation: {
-        fontSize: 13,
-        opacity: 0.7,
+    timestamp: {
+        fontSize: 11,
+        marginTop: 4,
     },
-    aboutText: {
-        fontSize: 15,
-        lineHeight: 22,
-        opacity: 0.8,
+    inputContainer: {
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderTopWidth: 1,
     },
-    linkButton: {
+    inputWrapper: {
         flexDirection: 'row',
-        alignItems: 'center',
-        padding: 16,
-        borderRadius: 12,
-        marginBottom: 12,
+        alignItems: 'flex-end',
+        borderWidth: 1,
+        borderRadius: 24,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
     },
-    linkContent: {
+    input: {
         flex: 1,
-        marginLeft: 12,
-    },
-    linkTitle: {
         fontSize: 15,
-        fontWeight: '600',
-        marginBottom: 2,
+        maxHeight: 100,
+        paddingVertical: 8,
     },
-    linkSubtitle: {
-        fontSize: 13,
-        opacity: 0.7,
+    sendButton: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginLeft: 8,
     },
 });
