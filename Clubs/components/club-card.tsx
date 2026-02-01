@@ -76,6 +76,7 @@ export function ClubCard({ club, onFollowChange }: ClubCardProps) {
     const iconColor = useThemeColor({ light: '#3c823c', dark: '#fff' }, 'text');
     const followBtnBg = useThemeColor({ light: '#3c823c', dark: '#fff' }, 'tint');
     const followBtnText = useThemeColor({ light: '#fff', dark: '#062406' }, 'background');
+    const checkmarkColor = useThemeColor({ light: '#fff', dark: '#062406' }, 'background');
 
     const handleFollowPress = async (e: any) => {
         e.stopPropagation();
@@ -205,7 +206,7 @@ export function ClubCard({ club, onFollowChange }: ClubCardProps) {
                                 <IconSymbol
                                     name={eventLoading ? "ellipsis" : isSignedUp ? "checkmark" : "plus"}
                                     size={12}
-                                    color={isSignedUp ? '#fff' : iconColor}
+                                    color={isSignedUp ? checkmarkColor : iconColor}
                                 />
                             </TouchableOpacity>
                         </View>
