@@ -641,6 +641,147 @@ export async function completeQuiz(userId: string, preferenceTags: string[]) {
 }
 
 // ===================
+// USER EVENTS APIs
+// ===================
+
+// Get soonest event for a club
+export async function getSoonestEventForClub(clubId: string) {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    
+    const { data, error } = await supabase
+      .from('events')
+      .select('event_id, event_title, event_description, event_date, event_time, location')
+      .eq('club_id', clubId)
+      .gte('event_date', today)
+      .order('event_date', { ascending: true })
+      .order('event_time', { ascending: true })
+      .limit(1)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') {
+      // PGRST116 is "not found" error, which means no upcoming events
+      console.error('Error fetching soonest event:', error);
+      return { data: null, error };
+    }
+    
+    return { data: error?.code === 'PGRST116' ? null : data, error: null };
+  } catch (error) {
+    console.error('Error getting soonest event:', error);
+    return { data: null, error };
+  }
+}
+
+// Sign up user for an event
+export async function signUpForEvent(userId: string, eventId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('user_events')
+      .insert({
+        user_id: userId,
+        event_id: eventId
+      })
+      .select();
+    
+    if (error) {
+      console.error('Error signing up for event:', error);
+      return { data: null, error };
+    }
+    
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error signing up for event:', error);
+    return { data: null, error };
+  }
+}
+
+// Remove user from an event
+export async function removeFromEvent(userId: string, eventId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('user_events')
+      .delete()
+      .eq('user_id', userId)
+      .eq('event_id', eventId);
+    
+    if (error) {
+      console.error('Error removing from event:', error);
+      return { data: null, error };
+    }
+    
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error removing from event:', error);
+    return { data: null, error };
+  }
+}
+
+// Check if user is signed up for an event
+export async function isSignedUpForEvent(userId: string, eventId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('user_events')
+      .select('user_id')
+      .eq('user_id', userId)
+      .eq('event_id', eventId)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error checking event signup status:', error);
+      return { data: false, error };
+    }
+    
+    return { data: !!data, error: null };
+  } catch (error) {
+    console.error('Error checking event signup status:', error);
+    return { data: false, error };
+  }
+}
+
+// Get all events user is signed up for
+export async function getUserSignedUpEvents(userId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('user_events')
+      .select(`
+        created_at,
+        events (
+          event_id,
+          event_title,
+          event_description,
+          event_date,
+          event_time,
+          location,
+          clubs (
+            club_name,
+            club_image
+          )
+        )
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching user events:', error);
+      return { data: null, error };
+    }
+    
+    // Transform the data
+    const userEvents = data?.map((item: any) => ({
+      ...item.events,
+      signedUpAt: item.created_at,
+      club_name: item.events.clubs.club_name,
+      club_image: item.events.clubs.club_image
+    })) || [];
+    
+    return { data: userEvents, error: null };
+  } catch (error) {
+    console.error('Error getting user signed up events:', error);
+    return { data: null, error };
+  }
+}
+
+// ===================
 // TAGS APIs
 // ===================
 

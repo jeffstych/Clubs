@@ -44,7 +44,7 @@ export default function MyClubsScreen() {
                     name: club.club_name,
                     description: club.club_description,
                     tags: club.club_tags || [],
-                    category: club.club_category,
+                    category: club.club_category?.charAt(0).toUpperCase() + club.club_category?.slice(1).toLowerCase() || '',
                     image: club.club_image,
                     followedAt: club.followedAt
                 }));

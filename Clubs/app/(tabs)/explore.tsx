@@ -61,7 +61,7 @@ export default function ExploreScreen() {
           name: club.club_name,
           description: club.club_description,
           tags: club.club_tags || [],
-          category: club.club_category,
+          category: club.club_category?.charAt(0).toUpperCase() + club.club_category?.slice(1).toLowerCase() || '',
           image: club.club_image,
           // Add any other fields that ClubCard expects
         }));
@@ -70,7 +70,7 @@ export default function ExploreScreen() {
         // Extract unique categories
         const uniqueCategories = [...new Set(
           clubsData
-            .map((club: any) => club.club_category)
+            .map((club: any) => club.club_category?.charAt(0).toUpperCase() + club.club_category?.slice(1).toLowerCase())
             .filter((category: any) => category && typeof category === 'string')
         )].sort();
         setCategories(uniqueCategories);
