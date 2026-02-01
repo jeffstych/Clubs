@@ -11,12 +11,15 @@ export const unstable_settings = {
 
 import { ThemeProvider as AppThemeProvider } from '@/context/ThemeContext';
 import { EventProvider } from '@/context/EventContext';
+import { FollowProvider } from '@/context/FollowContext';
 
 export default function RootLayout() {
   return (
     <AppThemeProvider>
       <EventProvider>
-        <RootLayoutNav />
+        <FollowProvider>
+          <RootLayoutNav />
+        </FollowProvider>
       </EventProvider>
     </AppThemeProvider>
   );
