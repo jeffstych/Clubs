@@ -24,11 +24,11 @@ export default function ExploreScreen() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const activeTagColor = useThemeColor({ light: '#fff', dark: '#062406' }, 'tint'); // Text on active tag
-  const inactiveTagColor = useThemeColor({ light: '#687076', dark: '#9BA1A6' }, 'text');
+  const inactiveTagColor = useThemeColor({ light: '#3c823c', dark: '#9BA1A6' }, 'text');
 
   // Glass effect colors
   const activeBgColor = useThemeColor({ light: '#3c823c', dark: '#ffffff' }, 'tint');
-  const inactiveBgColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.05)', dark: 'rgba(255, 255, 255, 0.1)' }, 'background');
+  const inactiveBgColor = useThemeColor({ light: 'rgba(60, 130, 60, 0.08)', dark: 'rgba(255, 255, 255, 0.1)' }, 'background');
   const inputBgColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.03)', dark: 'rgba(255, 255, 255, 0.05)' }, 'background');
   const borderColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.1)', dark: 'rgba(255, 255, 255, 0.2)' }, 'icon');
   const searchTextColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');

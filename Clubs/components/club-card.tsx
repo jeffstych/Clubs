@@ -68,6 +68,7 @@ export function ClubCard({ club, onFollowChange }: ClubCardProps) {
     };
 
     const cardBackgroundColor = useThemeColor({ light: '#ffffff', dark: '#151718' }, 'background');
+    const cardBorderColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.1)', dark: 'rgba(255, 255, 255, 0.1)' }, 'icon');
     // Translucent bubble effect for tags
     const tagBackgroundColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.08)', dark: 'rgba(255, 255, 255, 0.1)' }, 'background');
     const tagBorderColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.15)', dark: 'rgba(255, 255, 255, 0.2)' }, 'icon');
@@ -148,7 +149,7 @@ export function ClubCard({ club, onFollowChange }: ClubCardProps) {
             onPress={() => router.push(`/clubs/${club.id}` as any)}
             style={({ pressed }) => ({ opacity: pressed ? 0.95 : 1 })}
         >
-            <ThemedView style={{ ...styles.card, backgroundColor: cardBackgroundColor }}>
+            <ThemedView style={{ ...styles.card, backgroundColor: cardBackgroundColor, borderColor: cardBorderColor }}>
                 <Image source={{ uri: club.image }} style={styles.image} contentFit="cover" transition={1000} />
                 <View style={styles.content}>
                     <View style={styles.header}>
@@ -235,10 +236,11 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         overflow: 'hidden',
         marginBottom: 16,
+        borderWidth: 1,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowOpacity: 0.12,
+        shadowRadius: 6,
         elevation: 3,
     },
     image: {

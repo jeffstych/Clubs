@@ -22,28 +22,28 @@ export default function AskScreen() {
     const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
     const [userTags, setUserTags] = useState<string[]>([]);
-    
+
     // Prefetch user tags on mount and trigger auto-greeting
     useEffect(() => {
         if (session?.user?.id) {
             let mounted = true;
-            
+
             const initChat = async () => {
                 // 1. Fetch tags
                 let currentTags = userTags;
                 if (currentTags.length === 0) {
-                     const fetchedTags = await getUserTags(session.user.id);
-                     if (mounted && fetchedTags) {
-                         currentTags = fetchedTags || [];
-                         setUserTags(currentTags);
-                     }
+                    const fetchedTags = await getUserTags(session.user.id);
+                    if (mounted && fetchedTags) {
+                        currentTags = fetchedTags || [];
+                        setUserTags(currentTags);
+                    }
                 }
 
                 // 2. Clear initial hardcoded message if we want a fresh AI greeting
                 // Or keep it while loading. Let's send a hidden "Hello" to replace/append.
                 // The user said "I don't want that message [Hello] to be shown"
                 // but "I want the AI response to be shown".
-                
+
                 setIsThinking(true);
                 setMessages([]); // Clear hardcoded "Hi" to make room for real AI greeting
 
@@ -55,15 +55,15 @@ export default function AskScreen() {
                 } catch (e) {
                     console.error("Auto-greeting failed:", e);
                     if (mounted) {
-                         setMessages([{ text: "Hi! I'm ready to help you find clubs.", isUser: false }]);
+                        setMessages([{ text: "Hi! I'm ready to help you find clubs.", isUser: false }]);
                     }
                 } finally {
                     if (mounted) setIsThinking(false);
                 }
             };
-            
+
             initChat();
-            
+
             return () => { mounted = false; };
         }
     }, [session?.user?.id]);
@@ -71,8 +71,8 @@ export default function AskScreen() {
     const cardBg = useThemeColor({ light: '#ffffff', dark: '#151718' }, 'background');
     const inputBg = useThemeColor({ light: '#f5f5f5', dark: '#2a2a2a' }, 'background');
     const userBubbleColor = useThemeColor({ light: '#3c823c', dark: '#3c823c' }, 'tint');
-    const botBubbleColor = useThemeColor({ light: '#ffffff', dark: '#1f1f1f' }, 'background');
-    const borderColor = useThemeColor({ light: 'rgba(128, 128, 128, 0.2)', dark: 'rgba(128, 128, 128, 0.2)' }, 'icon');
+    const botBubbleColor = useThemeColor({ light: '#f2f2f7', dark: '#1c1c1e' }, 'background');
+    const bubbleBorderColor = useThemeColor({ light: 'rgba(0, 0, 0, 0.05)', dark: 'rgba(255, 255, 255, 0.1)' }, 'icon');
     const textColor = useThemeColor({ light: '#031103', dark: '#fff' }, 'text');
     const userMsgBg = useThemeColor({ light: '#2e632e', dark: '#fff' }, 'tint');
     const botMsgBg = useThemeColor({ light: '#f0f0f0', dark: '#1c1c1e' }, 'background');
@@ -84,7 +84,7 @@ export default function AskScreen() {
 
         const userText = input.trim();
         setInput('');
-        
+
         const userMessage = { text: userText, isUser: true };
         setMessages(prev => [...prev, userMessage]);
         setIsThinking(true);
@@ -98,22 +98,22 @@ export default function AskScreen() {
             const userId = session?.user?.id;
             console.log("AskScreen: handleSend called. UserId:", userId); // DEBUG LOG
             console.log("AskScreen: Current userTags state:", userTags); // DEBUG LOG
-            
+
             // Critical optimization: Ensure we have tags BEFORE calling Gemini
             // This prevents the AI from falling back to a slow 2-step process
             let currentTags = userTags;
             if (userId && currentTags.length === 0) {
-                 console.log("AskScreen: Tags missing, fetching now..."); // DEBUG LOG
-                 const fetchedTags = await getUserTags(userId);
-                 console.log("AskScreen: Fetched tags:", fetchedTags); // DEBUG LOG
-                 if (fetchedTags && fetchedTags.length > 0) {
-                     currentTags = fetchedTags;
-                     setUserTags(fetchedTags); // Update state for next time
-                 }
+                console.log("AskScreen: Tags missing, fetching now..."); // DEBUG LOG
+                const fetchedTags = await getUserTags(userId);
+                console.log("AskScreen: Fetched tags:", fetchedTags); // DEBUG LOG
+                if (fetchedTags && fetchedTags.length > 0) {
+                    currentTags = fetchedTags;
+                    setUserTags(fetchedTags); // Update state for next time
+                }
             } else {
-                 console.log("AskScreen: Using existing tags:", currentTags); // DEBUG LOG
+                console.log("AskScreen: Using existing tags:", currentTags); // DEBUG LOG
             }
-            
+
             const responseText = await chatWithGemini(messages, userText, userId, currentTags);
             const botMessage = { text: responseText, isUser: false };
             setMessages(prev => [...prev, botMessage]);
@@ -152,6 +152,7 @@ export default function AskScreen() {
                                 message.isUser ? styles.userMessage : styles.botMessage,
                                 {
                                     backgroundColor: message.isUser ? userBubbleColor : botBubbleColor,
+                                    borderColor: bubbleBorderColor,
                                     alignSelf: message.isUser ? 'flex-end' : 'flex-start',
                                 },
                             ]}
@@ -166,10 +167,10 @@ export default function AskScreen() {
                             </ThemedText>
                         </View>
                     ))}
-                    
+
                     {isThinking && (
                         <View style={[styles.messageBubble, styles.botMessage, { backgroundColor: botMsgBg }]}>
-                             <ActivityIndicator size="small" color={textColor} />
+                            <ActivityIndicator size="small" color={textColor} />
                         </View>
                     )}
                 </ScrollView>
@@ -178,7 +179,7 @@ export default function AskScreen() {
                     styles.inputWrapper,
                     {
                         backgroundColor: cardBg,
-                        paddingBottom: Math.max(insets.bottom, 20) + 70 
+                        paddingBottom: Math.max(insets.bottom, 20) + 70
                     }
                 ]}>
                     <View style={[styles.inputContainer, { backgroundColor: inputBg }]}>
@@ -192,15 +193,15 @@ export default function AskScreen() {
                             returnKeyType="send"
                             editable={!isThinking}
                         />
-                        <TouchableOpacity 
-                            onPress={handleSend} 
+                        <TouchableOpacity
+                            onPress={handleSend}
                             disabled={!input.trim() || isThinking}
                             style={styles.sendButton}
                         >
-                            <IconSymbol 
-                                name="paperplane.fill" 
-                                size={20} 
-                                color={input.trim() && !isThinking ? greenText : iconColor} 
+                            <IconSymbol
+                                name="paperplane.fill"
+                                size={20}
+                                color={input.trim() && !isThinking ? greenText : iconColor}
                             />
                         </TouchableOpacity>
                     </View>
@@ -231,11 +232,12 @@ const styles = StyleSheet.create({
         padding: 12,
         borderRadius: 16,
         marginBottom: 12,
+        borderWidth: 1,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 2,
     },
     userMessage: {
         alignSelf: 'flex-end',
