@@ -132,8 +132,8 @@ export default function ProfilePage() {
               <ThemedText type="defaultSemiBold">{userPreferences.length}</ThemedText>
               <ThemedText style={[styles.statLabel, { color: secondaryTextColor }]}>Interests</ThemedText>
             </View>
-            <TouchableOpacity style={[styles.smallButton, { borderColor: tintColor }]}>
-              <ThemedText style={{ color: tintColor, fontSize: 12, fontWeight: '600' }}>Clubs</ThemedText>
+            <TouchableOpacity style={[styles.smallButton, { borderColor: tintColor, paddingHorizontal: 14 }]}>
+              <ThemedText style={{ color: tintColor, fontSize: 12, fontWeight: '600' }}>Clubbs</ThemedText>
             </TouchableOpacity>
           </View>
 
