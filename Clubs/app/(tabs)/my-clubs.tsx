@@ -1,29 +1,87 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
-import { useFollow } from '@/context/FollowContext';
-import { CLUBS } from '@/data/clubs';
 import { ClubCard } from '@/components/club-card';
+import { useAuth } from '@/context/AuthContext';
+import { getFollowedClubs } from '@/lib/supabase';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function MyClubsScreen() {
-    const { followedClubs } = useFollow();
+    const { session } = useAuth();
+    const [followedClubs, setFollowedClubs] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const myClubs = CLUBS.filter(club => followedClubs.has(club.id));
+    // Load clubs when the component mounts
+    useEffect(() => {
+        if (session?.user?.id) {
+            loadFollowedClubs();
+        } else {
+            setLoading(false);
+        }
+    }, [session]);
+
+    // Reload clubs every time this tab is focused
+    useFocusEffect(
+        React.useCallback(() => {
+            if (session?.user?.id) {
+                loadFollowedClubs();
+            }
+        }, [session])
+    );
+
+    const loadFollowedClubs = async () => {
+        if (!session?.user?.id) return;
+        
+        try {
+            const { data: clubs, error } = await getFollowedClubs(session.user.id);
+            if (error) {
+                console.error('Error loading followed clubs:', error);
+            } else if (clubs) {
+                // Transform Supabase data to match ClubCard expectations
+                const transformedClubs = clubs.map((club: any) => ({
+                    id: club.club_id,
+                    name: club.club_name,
+                    description: club.club_description,
+                    tags: club.club_tags || [],
+                    category: club.club_category?.charAt(0).toUpperCase() + club.club_category?.slice(1).toLowerCase() || '',
+                    image: club.club_image,
+                    followedAt: club.followedAt
+                }));
+                setFollowedClubs(transformedClubs);
+            }
+        } catch (error) {
+            console.error('Error loading followed clubs:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <ThemedView style={styles.container}>
             <ScrollView contentContainerStyle={styles.content}>
                 <ThemedText type="title" style={styles.title}>My Clubs</ThemedText>
 
-                {myClubs.length === 0 ? (
+                {loading ? (
+                    <ThemedText style={styles.subtitle}>
+                        Loading your clubs...
+                    </ThemedText>
+                ) : !session ? (
+                    <ThemedText style={styles.subtitle}>
+                        Please sign in to see your followed clubs.
+                    </ThemedText>
+                ) : followedClubs.length === 0 ? (
                     <ThemedText style={styles.subtitle}>
                         No clubs followed yet. Follow clubs from the Explore page to see them here.
                     </ThemedText>
                 ) : (
                     <View style={styles.clubsList}>
-                        {myClubs.map(club => (
-                            <ClubCard key={club.id} club={club} />
+                        {followedClubs.map(club => (
+                            <ClubCard 
+                                key={club.id} 
+                                club={club} 
+                                onFollowChange={loadFollowedClubs}
+                            />
                         ))}
                     </View>
                 )}

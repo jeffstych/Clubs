@@ -34,11 +34,14 @@ export default function AskScreen() {
 
     const cardBg = useThemeColor({ light: '#ffffff', dark: '#151718' }, 'background');
     const inputBg = useThemeColor({ light: '#f5f5f5', dark: '#2a2a2a' }, 'background');
-    const greenText = useThemeColor({ light: '#2e632e', dark: '#2e632e' }, 'tint');
+    const userBubbleColor = useThemeColor({ light: '#3c823c', dark: '#3c823c' }, 'tint');
+    const botBubbleColor = useThemeColor({ light: '#ffffff', dark: '#1f1f1f' }, 'background');
+    const borderColor = useThemeColor({ light: 'rgba(128, 128, 128, 0.2)', dark: 'rgba(128, 128, 128, 0.2)' }, 'icon');
     const textColor = useThemeColor({ light: '#031103', dark: '#fff' }, 'text');
     const userMsgBg = useThemeColor({ light: '#2e632e', dark: '#fff' }, 'tint');
     const botMsgBg = useThemeColor({ light: '#f0f0f0', dark: '#1c1c1e' }, 'background');
     const iconColor = useThemeColor({ light: '#687076', dark: '#9BA1A6' }, 'text');
+    const greenText = useThemeColor({ light: '#3c823c', dark: '#3c823c' }, 'tint');
 
     const handleSend = async () => {
         if (!input.trim() || isThinking) return;
@@ -99,33 +102,34 @@ export default function AskScreen() {
             >
                 <ScrollView
                     ref={scrollViewRef}
+
                     contentContainerStyle={styles.messagesContainer}
                     keyboardShouldPersistTaps="handled"
+                    onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
                 >
                     <ThemedText type="title" style={styles.title}>Ask</ThemedText>
-                    {messages.map((msg, index) => {
-                        let textStyle = { color: textColor };
-                        if (msg.isUser) {
-                            textStyle = { color: colorScheme === 'dark' ? '#031103' : '#fff' };
-                        } else {
-                            textStyle = { color: colorScheme === 'dark' ? '#fff' : '#031103' };
-                        }
-
-                        return (
-                            <View
-                                key={index}
+                    {messages.map((message, index) => (
+                        <View
+                            key={index}
+                            style={[
+                                styles.messageBubble,
+                                message.isUser ? styles.userMessage : styles.botMessage,
+                                {
+                                    backgroundColor: message.isUser ? userBubbleColor : botBubbleColor,
+                                    alignSelf: message.isUser ? 'flex-end' : 'flex-start',
+                                },
+                            ]}
+                        >
+                            <ThemedText
                                 style={[
-                                    styles.messageBubble,
-                                    msg.isUser ? styles.userMessage : styles.botMessage,
-                                    { backgroundColor: msg.isUser ? userMsgBg : botMsgBg }
+                                    styles.messageText,
+                                    { color: message.isUser ? '#ffffff' : textColor },
                                 ]}
                             >
-                                <ThemedText style={[styles.messageText, textStyle]}>
-                                    {msg.text}
-                                </ThemedText>
-                            </View>
-                        );
-                    })}
+                                {message.text}
+                            </ThemedText>
+                        </View>
+                    ))}
                     
                     {isThinking && (
                         <View style={[styles.messageBubble, styles.botMessage, { backgroundColor: botMsgBg }]}>
@@ -187,10 +191,15 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     messageBubble: {
+        maxWidth: '80%',
         padding: 12,
         borderRadius: 16,
         marginBottom: 12,
-        maxWidth: '80%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 1,
     },
     userMessage: {
         alignSelf: 'flex-end',
@@ -203,6 +212,11 @@ const styles = StyleSheet.create({
     messageText: {
         fontSize: 15,
         lineHeight: 20,
+        marginBottom: 4,
+    },
+    timestamp: {
+        fontSize: 11,
+        marginTop: 4,
     },
     inputWrapper: {
         padding: 16,
@@ -227,4 +241,3 @@ const styles = StyleSheet.create({
         borderRadius: 20,
     },
 });
-
