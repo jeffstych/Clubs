@@ -37,6 +37,7 @@ const MAPPING = {
   'plus': 'add',
   'checkmark': 'check',
   'shield.fill': 'shield',
+  'squirrel.fill': 'pets',
 } as IconMapping;
 
 /**
