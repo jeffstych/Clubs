@@ -22,8 +22,10 @@ export default function SettingsScreen() {
             <View style={[styles.section, { backgroundColor: itemBg, borderColor }]}>
                 <View style={styles.row}>
                     <View style={styles.rowText}>
-                        <ThemedText type="defaultSemiBold">Dark Mode</ThemedText>
-                        <ThemedText style={styles.rowSubtext}>Use dark theme for the application</ThemedText>
+                        <ThemedText type="defaultSemiBold">{isDark ? 'Light Mode?' : 'Dark Mode?'}</ThemedText>
+                        <ThemedText style={styles.rowSubtext}>
+                            {isDark ? 'Use the light theme for this application' : 'Use the dark theme for this application'}
+                        </ThemedText>
                     </View>
                     <Switch
                         value={isDark}
