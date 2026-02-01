@@ -194,3 +194,429 @@ export async function isFollowingClub(userId: string, clubId: string) {
   }
 }
 
+// ===================
+// AUTH APIs
+// ===================
+
+// Get current user
+export async function getCurrentUser() {
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error) {
+      console.error('Error getting current user:', error);
+      return { user: null, error };
+    }
+    return { user, error: null };
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    return { user: null, error };
+  }
+}
+
+// Sign up
+export async function signUp(email: string, password: string) {
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+    
+    if (error) {
+      console.error('Error signing up:', error);
+      return { data: null, error };
+    }
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error signing up:', error);
+    return { data: null, error };
+  }
+}
+
+// Sign in
+export async function signIn(email: string, password: string) {
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    
+    if (error) {
+      console.error('Error signing in:', error);
+      return { data: null, error };
+    }
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error signing in:', error);
+    return { data: null, error };
+  }
+}
+
+// Sign out
+export async function signOut() {
+  try {
+    const { error } = await supabase.auth.signOut();
+    
+    if (error) {
+      console.error('Error signing out:', error);
+      return { error };
+    }
+    return { error: null };
+  } catch (error) {
+    console.error('Error signing out:', error);
+    return { error };
+  }
+}
+
+// ===================
+// CLUB MANAGEMENT APIs
+// ===================
+
+// Get club by ID
+export async function getClubById(clubId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('clubs')
+      .select('club_id, club_name, club_description, club_tags, club_category, club_image')
+      .eq('club_id', clubId)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching club:', error);
+      return { data: null, error };
+    }
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error getting club:', error);
+    return { data: null, error };
+  }
+}
+
+// Search clubs by name or description
+export async function searchClubs(searchTerm: string) {
+  try {
+    const { data, error } = await supabase
+      .from('clubs')
+      .select('club_id, club_name, club_description, club_tags, club_category, club_image')
+      .or(`club_name.ilike.%${searchTerm}%,club_description.ilike.%${searchTerm}%`);
+    
+    if (error) {
+      console.error('Error searching clubs:', error);
+      return { data: null, error };
+    }
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error searching clubs:', error);
+    return { data: null, error };
+  }
+}
+
+// Get clubs by category
+export async function getClubsByCategory(category: string) {
+  try {
+    const { data, error } = await supabase
+      .from('clubs')
+      .select('club_id, club_name, club_description, club_tags, club_category, club_image')
+      .eq('club_category', category);
+    
+    if (error) {
+      console.error('Error fetching clubs by category:', error);
+      return { data: null, error };
+    }
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error getting clubs by category:', error);
+    return { data: null, error };
+  }
+}
+
+// Create a new club
+export async function createClub(clubData: {
+  club_name: string;
+  club_description: string;
+  club_tags: string[];
+  club_category: string;
+  club_image?: string;
+}) {
+  try {
+    const { data, error } = await supabase
+      .from('clubs')
+      .insert([clubData])
+      .select('club_id, club_name, club_description, club_tags, club_category, club_image')
+      .single();
+    
+    if (error) {
+      console.error('Error creating club:', error);
+      return { data: null, error };
+    }
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error creating club:', error);
+    return { data: null, error };
+  }
+}
+
+// ===================
+// EVENTS APIs
+// ===================
+
+// Get events by club ID
+export async function getEventsByClub(clubId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('events')
+      .select('event_id, event_title, event_description, event_date, event_time, location, club_id')
+      .eq('club_id', clubId)
+      .order('event_date', { ascending: true });
+    
+    if (error) {
+      console.error('Error fetching events for club:', error);
+      return { data: null, error };
+    }
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error getting events by club:', error);
+    return { data: null, error };
+  }
+}
+
+// Get upcoming events
+export async function getUpcomingEvents() {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    
+    const { data, error } = await supabase
+      .from('events')
+      .select(`
+        event_id,
+        event_title,
+        event_description,
+        event_date,
+        event_time,
+        location,
+        clubs (
+          club_name,
+          club_image
+        )
+      `)
+      .gte('event_date', today)
+      .order('event_date', { ascending: true });
+    
+    if (error) {
+      console.error('Error fetching upcoming events:', error);
+      return { data: null, error };
+    }
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error getting upcoming events:', error);
+    return { data: null, error };
+  }
+}
+
+// Get events for followed clubs
+export async function getFollowedClubEvents(userId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('club_followings')
+      .select(`
+        clubs!inner (
+          club_name,
+          club_image,
+          events (
+            event_id,
+            event_title,
+            event_description,
+            event_date,
+            event_time,
+            location
+          )
+        )
+      `)
+      .eq('user_id', userId);
+    
+    if (error) {
+      console.error('Error fetching followed club events:', error);
+      return { data: null, error };
+    }
+    
+    // Flatten the events array and add club info
+    const events = data?.flatMap((item: any) => {
+      const club = item.clubs;
+      return club.events?.map((event: any) => ({
+        ...event,
+        club_name: club.club_name,
+        club_image: club.club_image
+      })) || [];
+    }) || [];
+    
+    return { data: events, error: null };
+  } catch (error) {
+    console.error('Error getting followed club events:', error);
+    return { data: null, error };
+  }
+}
+
+// Create a new event
+export async function createEvent(eventData: {
+  event_title: string;
+  event_description: string;
+  event_date: string;
+  event_time: string;
+  location: string;
+  club_id: string;
+}) {
+  try {
+    const { data, error } = await supabase
+      .from('events')
+      .insert([eventData])
+      .select('event_id, event_title, event_description, event_date, event_time, location, club_id')
+      .single();
+    
+    if (error) {
+      console.error('Error creating event:', error);
+      return { data: null, error };
+    }
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error creating event:', error);
+    return { data: null, error };
+  }
+}
+
+// ===================
+// QUIZ APIs
+// ===================
+
+// Get all quiz questions with options
+export async function getQuizQuestions() {
+  try {
+    const { data: questions, error: questionsError } = await supabase
+      .from('quiz_questions')
+      .select('question_id, question_text')
+      .order('created_at', { ascending: true });
+
+    if (questionsError) {
+      console.error('Error fetching quiz questions:', questionsError);
+      return { data: null, error: questionsError };
+    }
+
+    const { data: options, error: optionsError } = await supabase
+      .from('quiz_question_options')
+      .select('option_id, question_id, option_text, tags');
+
+    if (optionsError) {
+      console.error('Error fetching quiz options:', optionsError);
+      return { data: null, error: optionsError };
+    }
+
+    // Group options by question
+    const questionsWithOptions = questions?.map((q) => ({
+      ...q,
+      options: options?.filter((o) => o.question_id === q.question_id) || [],
+    })) || [];
+
+    return { data: questionsWithOptions, error: null };
+  } catch (error) {
+    console.error('Error getting quiz questions:', error);
+    return { data: null, error };
+  }
+}
+
+// Submit quiz responses
+export async function submitQuizResponses(userId: string, responses: { questionId: string; optionId: string }[]) {
+  try {
+    const quizResponses = responses.map(response => ({
+      user_id: userId,
+      question_id: response.questionId,
+      option_id: response.optionId
+    }));
+    
+    const { data, error } = await supabase
+      .from('quiz_responses')
+      .insert(quizResponses)
+      .select();
+    
+    if (error) {
+      console.error('Error submitting quiz responses:', error);
+      return { data: null, error };
+    }
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error submitting quiz responses:', error);
+    return { data: null, error };
+  }
+}
+
+// ===================
+// PROFILE APIs
+// ===================
+
+// Create user profile
+export async function createUserProfile(userId: string, preferenceTags: string[] = []) {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .insert([{
+        user_id: userId,
+        preference_tags: preferenceTags,
+        took_quiz: false
+      }])
+      .select('user_id, preference_tags, took_quiz')
+      .single();
+    
+    if (error) {
+      console.error('Error creating user profile:', error);
+      return { data: null, error };
+    }
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error creating user profile:', error);
+    return { data: null, error };
+  }
+}
+
+// Update user profile preferences
+export async function updateUserPreferences(userId: string, preferenceTags: string[]) {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ preference_tags: preferenceTags })
+      .eq('user_id', userId)
+      .select('user_id, preference_tags, took_quiz')
+      .single();
+    
+    if (error) {
+      console.error('Error updating user preferences:', error);
+      return { data: null, error };
+    }
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error updating user preferences:', error);
+    return { data: null, error };
+  }
+}
+
+// Mark quiz as completed and update preference tags
+export async function completeQuiz(userId: string, preferenceTags: string[]) {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ 
+        took_quiz: true, 
+        preference_tags: preferenceTags 
+      })
+      .eq('user_id', userId)
+      .select('user_id, preference_tags, took_quiz')
+      .single();
+    
+    if (error) {
+      console.error('Error completing quiz:', error);
+      return { data: null, error };
+    }
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error completing quiz:', error);
+    return { data: null, error };
+  }
+}
+
