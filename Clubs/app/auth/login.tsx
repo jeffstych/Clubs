@@ -28,9 +28,6 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <Auth />
-      {session && session.user && (
-        <Text style={styles.text}>User ID: {session.user.id}</Text>
-      )}
     </View>
   );
 }

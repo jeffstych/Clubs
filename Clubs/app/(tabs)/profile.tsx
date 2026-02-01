@@ -1,18 +1,43 @@
 import React from 'react';
 import {
   View,
-  Text,
-  Image,
-  ScrollView,
-  TouchableOpacity,
   StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  Platform,
 } from 'react-native';
-import { Link } from 'expo-router';
+import { Image } from 'expo-image';
+import { router } from 'expo-router';
+import { ThemedView } from '@/components/themed-view';
+import { ThemedText } from '@/components/themed-text';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import { supabase } from '@/lib/supabase';
 
 export default function ProfilePage() {
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    const performLogout = async () => {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        Alert.alert('Error', error.message);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (confirm('Are you sure you want to log out?')) {
+        performLogout();
+      }
+    } else {
+      Alert.alert(
+        'Log Out',
+        'Are you sure you want to log out?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Log Out', style: 'destructive', onPress: performLogout },
+        ]
+      );
+    }
   };
 
   // TODO: Replace with actual user data from Supabase
@@ -25,179 +50,214 @@ export default function ProfilePage() {
     followingCount: 12,
   };
 
+  const itemBg = useThemeColor({ light: '#ffffff', dark: '#151718' }, 'background');
+  const borderColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.1)', dark: 'rgba(255, 255, 255, 0.1)' }, 'icon');
+  const tintColor = useThemeColor({ light: '#3c823c', dark: '#fff' }, 'tint');
+  const secondaryTextColor = useThemeColor({ light: '#687076', dark: '#9BA1A6' }, 'text');
+
+  const menuItems = [
+    { icon: 'list.bullet', label: 'My Clubs', href: '/(tabs)/my-clubs' },
+    { icon: 'calendar', label: 'My Events', href: '/(tabs)/calendar' },
+    { icon: 'gearshape.fill', label: 'Settings', href: '/settings' },
+  ];
+
   return (
-    <ScrollView style={styles.container}>
-      {/* Profile Header */}
-      <View style={styles.header}>
-        {/* Avatar */}
-        <Image
-          source={{ uri: user.avatar_url }}
-          style={styles.avatar}
-        />
+    <ThemedView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.contentContainer}>
+        <ThemedText type="title" style={styles.title}>Profile</ThemedText>
 
-        {/* User Info */}
-        <View style={styles.userInfo}>
-          <Text style={styles.name}>{user.name}</Text>
-          <Text style={styles.email}>{user.email}</Text>
-        </View>
+        <View style={[styles.headerCard, { backgroundColor: itemBg, borderColor }]}>
+          <View style={styles.profileInfo}>
+            <Image
+              source={user.avatar_url}
+              style={styles.avatar}
+            />
+            <View style={styles.userMeta}>
+              <ThemedText type="subtitle">{user.name}</ThemedText>
+              <ThemedText style={{ color: secondaryTextColor }}>{user.email}</ThemedText>
+            </View>
+          </View>
 
-        {/* Edit Profile Button */}
-        <TouchableOpacity style={styles.editButton}>
-          <Text style={styles.editButtonText}>Edit Profile</Text>
-        </TouchableOpacity>
-      </View>
+          {user.bio && (
+            <ThemedText style={styles.bio}>{user.bio}</ThemedText>
+          )}
 
-      {/* Bio */}
-      {user.bio && (
-        <View style={styles.bioContainer}>
-          <Text style={styles.bio}>{user.bio}</Text>
-        </View>
-      )}
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <ThemedText type="defaultSemiBold">{user.followingCount}</ThemedText>
+              <ThemedText style={[styles.statLabel, { color: secondaryTextColor }]}>Following</ThemedText>
+            </View>
+          </View>
 
-      {/* Stats */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{user.followingCount}</Text>
-          <Text style={styles.statLabel}>Following</Text>
-        </View>
-      </View>
-
-      {/* Menu Options */}
-      <View style={styles.menuContainer}>
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuIcon}>📋</Text>
-          <Text style={styles.menuText}>My Clubs</Text>
-          <Text style={styles.menuArrow}>›</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuIcon}>📅</Text>
-          <Text style={styles.menuText}>My Events</Text>
-          <Text style={styles.menuArrow}>›</Text>
-        </TouchableOpacity>
-
-        <Link href="/auth/quiz?edit=true" asChild>
-          <TouchableOpacity style={styles.menuItem}>
-            <Text style={styles.menuIcon}>🎯</Text>
-            <Text style={styles.menuText}>Edit Preferences</Text>
-            <Text style={styles.menuArrow}>›</Text>
+          <TouchableOpacity style={[styles.editButton, { borderColor: tintColor }]}>
+            <ThemedText style={{ color: tintColor, fontWeight: '600' }}>Edit Profile</ThemedText>
           </TouchableOpacity>
-        </Link>
+        </View>
 
-        <Link href="/settings" asChild>
-          <TouchableOpacity style={styles.menuItem}>
-            <Text style={styles.menuIcon}>⚙️</Text>
-            <Text style={styles.menuText}>Settings</Text>
-            <Text style={styles.menuArrow}>›</Text>
+        <View style={styles.menuSection}>
+          {menuItems.map((item, index) => {
+            const isFirst = index === 0;
+            const isLast = index === menuItems.length - 1;
+            return (
+              <TouchableOpacity
+                key={item.label}
+                onPress={() => router.push(item.href as any)}
+                style={{
+                  ...styles.menuItem,
+                  backgroundColor: itemBg,
+                  borderTopColor: borderColor,
+                  borderBottomColor: borderColor,
+                  borderLeftColor: borderColor,
+                  borderRightColor: borderColor,
+                  borderTopLeftRadius: isFirst ? 12 : 0,
+                  borderTopRightRadius: isFirst ? 12 : 0,
+                  borderBottomLeftRadius: isLast ? 12 : 0,
+                  borderBottomRightRadius: isLast ? 12 : 0,
+                  borderTopWidth: isFirst ? 1 : 0,
+                }}
+              >
+                <View style={styles.menuItemLeft}>
+                  <IconSymbol name={item.icon as any} size={20} color={tintColor} />
+                  <ThemedText style={styles.menuLabel}>{item.label}</ThemedText>
+                </View>
+                <IconSymbol name="chevron.right" size={16} color={secondaryTextColor} />
+              </TouchableOpacity>
+            );
+          })}
+
+          <TouchableOpacity
+            onPress={() => router.push('/auth/quiz?edit=true')}
+            style={{
+              ...styles.menuItem,
+              backgroundColor: itemBg,
+              borderTopColor: borderColor,
+              borderBottomColor: borderColor,
+              borderLeftColor: borderColor,
+              borderRightColor: borderColor,
+            }}
+          >
+            <View style={styles.menuItemLeft}>
+              <ThemedText style={styles.emojiIcon}>🎯</ThemedText>
+              <ThemedText style={styles.menuLabel}>Edit Preferences</ThemedText>
+            </View>
+            <IconSymbol name="chevron.right" size={16} color={secondaryTextColor} />
           </TouchableOpacity>
-        </Link>
 
-        <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
-          <Text style={styles.menuIcon}>🚪</Text>
-          <Text style={styles.menuText}>Log Out</Text>
-          <Text style={styles.menuArrow}>›</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          <TouchableOpacity
+            style={{
+              ...styles.menuItem,
+              ...styles.logoutItem,
+              backgroundColor: itemBg,
+              borderTopColor: borderColor,
+              borderBottomColor: borderColor,
+              borderLeftColor: borderColor,
+              borderRightColor: borderColor,
+            }}
+            onPress={handleLogout}
+          >
+            <View style={styles.menuItemLeft}>
+              <IconSymbol name="rectangle.portrait.and.arrow.right" size={20} color="#ff3b30" />
+              <ThemedText style={styles.logoutLabel}>Log Out</ThemedText>
+            </View>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
   },
-  header: {
-    backgroundColor: '#FFFFFF',
+  contentContainer: {
+    padding: 16,
+    paddingTop: 60,
+  },
+  title: {
+    marginBottom: 20,
+  },
+  headerCard: {
     padding: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 24,
+  },
+  profileInfo: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    marginBottom: 16,
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 16,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    marginRight: 16,
   },
-  userInfo: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  name: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  email: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  editButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 8,
-    backgroundColor: '#3B82F6',
-    borderRadius: 20,
-  },
-  editButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  bioContainer: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    marginTop: 12,
+  userMeta: {
+    flex: 1,
   },
   bio: {
     fontSize: 14,
-    color: '#374151',
     lineHeight: 20,
+    marginBottom: 16,
+    opacity: 0.8,
   },
-  statsContainer: {
-    backgroundColor: '#FFFFFF',
+  statsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 20,
-    marginTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(128, 128, 128, 0.2)',
+    paddingTop: 16,
+    marginBottom: 16,
   },
   statItem: {
     alignItems: 'center',
-  },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
+    marginRight: 24,
   },
   statLabel: {
     fontSize: 12,
-    color: '#6B7280',
-    marginTop: 4,
+    marginTop: 2,
   },
-  menuContainer: {
-    backgroundColor: '#FFFFFF',
-    marginTop: 12,
-    paddingVertical: 8,
+  editButton: {
+    width: '100%',
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  menuSection: {
+    gap: 0,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
   },
-  menuIcon: {
-    fontSize: 24,
-    marginRight: 16,
+  menuItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  menuText: {
-    flex: 1,
+  menuLabel: {
     fontSize: 16,
-    color: '#111827',
+    marginLeft: 12,
+    fontWeight: '500',
   },
-  menuArrow: {
-    fontSize: 24,
-    color: '#9CA3AF',
+  logoutItem: {
+    marginTop: 12,
+    borderRadius: 12,
+    borderTopWidth: 1,
+  },
+  emojiIcon: {
+    fontSize: 18,
+  },
+  logoutLabel: {
+    fontSize: 16,
+    marginLeft: 12,
+    fontWeight: '500',
+    color: '#ff3b30',
   },
 });

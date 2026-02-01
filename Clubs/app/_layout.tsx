@@ -9,6 +9,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { ThemeProvider as AppThemeProvider } from '@/context/ThemeContext';
 import { EventProvider } from '@/context/EventContext';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { FollowProvider } from '@/context/FollowContext';
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
@@ -65,7 +66,9 @@ export default function RootLayout() {
     <AuthProvider>
       <AppThemeProvider>
         <EventProvider>
-          <RootLayoutNav />
+          <FollowProvider>
+            <RootLayoutNav />
+          </FollowProvider>
         </EventProvider>
       </AppThemeProvider>
     </AuthProvider>

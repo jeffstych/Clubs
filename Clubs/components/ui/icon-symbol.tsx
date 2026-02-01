@@ -18,10 +18,24 @@ const MAPPING = {
   'paperplane.fill': 'send',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
+  'chevron.left': 'chevron-left',
   'sparkles': 'star',
   'magnifyingglass': 'search',
   'line.3.horizontal.decrease.circle': 'filter-list',
   'chevron.down': 'expand-more',
+  'chevron.up': 'expand-less',
+  'calendar': 'event',
+  'clock': 'schedule',
+  'location': 'place',
+  'arrow.up': 'arrow-upward',
+  'list.bullet': 'list',
+  'gearshape.fill': 'settings',
+  'rectangle.portrait.and.arrow.right': 'logout',
+  'globe': 'public',
+  'person.fill': 'person',
+  'message': 'chat',
+  'plus': 'add',
+  'checkmark': 'check',
 } as IconMapping;
 
 /**
@@ -41,5 +55,7 @@ export function IconSymbol({
   style?: StyleProp<TextStyle>;
   weight?: SymbolWeight;
 }) {
-  return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
+  // Use a fallback icon if mapping not found
+  const iconName = MAPPING[name] || 'help-outline';
+  return <MaterialIcons color={color} size={size} name={iconName} style={style} />;
 }
