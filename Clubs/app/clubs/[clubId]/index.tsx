@@ -1,127 +1,123 @@
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+    View,
+    ScrollView,
+    StyleSheet,
+    ActivityIndicator,
+    TouchableOpacity,
+    Pressable,
+} from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
-import { useState, useRef } from 'react';
+import { Image } from 'expo-image';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { CLUBS, Club } from '@/data/clubs';
 
-interface Message {
-    id: string;
-    text: string;
-    isUser: boolean;
-    timestamp: Date;
-}
-
-export default function ClubChatPage() {
+export default function ClubDetailPage() {
     const { clubId } = useLocalSearchParams();
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            id: '1',
-            text: `Hello! I'm here to help you learn about this club. What would you like to know?`,
-            isUser: false,
-            timestamp: new Date(),
-        },
-    ]);
-    const [inputText, setInputText] = useState('');
-    const scrollViewRef = useRef<ScrollView>(null);
+    const [club, setClub] = useState<Club | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [isFollowing, setIsFollowing] = useState(false);
 
     const bgColor = useThemeColor({ light: '#f9fafb', dark: '#0a0a0a' }, 'background');
-    const userBubbleColor = useThemeColor({ light: '#3c823c', dark: '#3c823c' }, 'tint');
-    const botBubbleColor = useThemeColor({ light: '#ffffff', dark: '#1f1f1f' }, 'background');
-    const inputBgColor = useThemeColor({ light: '#ffffff', dark: '#1f1f1f' }, 'background');
-    const borderColor = useThemeColor({ light: '#e5e7eb', dark: '#2f2f2f' }, 'icon');
+    const cardBg = useThemeColor({ light: '#ffffff', dark: '#151718' }, 'background');
+    const tintColor = useThemeColor({ light: '#3c823c', dark: '#3c823c' }, 'tint');
+    const secondaryTextColor = useThemeColor({ light: '#687076', dark: '#9BA1A6' }, 'text');
+    const borderColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.1)', dark: 'rgba(255, 255, 255, 0.1)' }, 'icon');
 
-    const handleSend = () => {
-        if (!inputText.trim()) return;
+    useEffect(() => {
+        // Find the club in the local data
+        const foundClub = CLUBS.find(c => c.id === clubId);
+        if (foundClub) {
+            setClub(foundClub);
+        }
+        setLoading(false);
+    }, [clubId]);
 
-        const newMessage: Message = {
-            id: Date.now().toString(),
-            text: inputText,
-            isUser: true,
-            timestamp: new Date(),
-        };
+    if (loading) {
+        return (
+            <ThemedView style={styles.centerContainer}>
+                <ActivityIndicator size="large" color={tintColor} />
+            </ThemedView>
+        );
+    }
 
-        setMessages((prev) => [...prev, newMessage]);
-        setInputText('');
-
-        // Simulate bot response
-        setTimeout(() => {
-            const botResponse: Message = {
-                id: (Date.now() + 1).toString(),
-                text: "I'm a demo bot! In a real implementation, I would answer your questions about the club.",
-                isUser: false,
-                timestamp: new Date(),
-            };
-            setMessages((prev) => [...prev, botResponse]);
-        }, 1000);
-    };
+    if (!club) {
+        return (
+            <ThemedView style={styles.centerContainer}>
+                <ThemedText>Club not found</ThemedText>
+            </ThemedView>
+        );
+    }
 
     return (
-        <>
-            <Stack.Screen options={{ title: 'Club Assistant' }} />
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={[styles.container, { backgroundColor: bgColor }]}
-                keyboardVerticalOffset={90}
-            >
-                {/* Chat Messages */}
-                <ScrollView
-                    ref={scrollViewRef}
-                    style={styles.messagesContainer}
-                    contentContainerStyle={styles.messagesContent}
-                    onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
-                >
-                    {messages.map((message) => (
-                        <View
-                            key={message.id}
-                            style={[
-                                styles.messageBubble,
-                                message.isUser ? styles.userBubble : styles.botBubble,
-                                {
-                                    backgroundColor: message.isUser ? userBubbleColor : botBubbleColor,
-                                    alignSelf: message.isUser ? 'flex-end' : 'flex-start',
-                                },
-                            ]}
-                        >
-                            <ThemedText
-                                style={[
-                                    styles.messageText,
-                                    { color: message.isUser ? '#ffffff' : undefined },
-                                ]}
-                            >
-                                {message.text}
-                            </ThemedText>
-                            <Text style={[styles.timestamp, { color: message.isUser ? 'rgba(255,255,255,0.7)' : '#9ca3af' }]}>
-                                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </Text>
-                        </View>
-                    ))}
-                </ScrollView>
+        <ThemedView style={styles.container}>
+            <Stack.Screen options={{ title: club.name, headerShadowVisible: false }} />
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                <Image source={{ uri: club.image }} style={styles.coverImage} contentFit="cover" />
 
-                {/* Input Area */}
-                <View style={[styles.inputContainer, { backgroundColor: bgColor, borderTopColor: borderColor }]}>
-                    <View style={[styles.inputWrapper, { backgroundColor: inputBgColor, borderColor: borderColor }]}>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Ask me anything about this club..."
-                            value={inputText}
-                            onChangeText={setInputText}
-                            multiline
-                            maxLength={500}
-                            onSubmitEditing={handleSend}
-                        />
+                <View style={styles.content}>
+                    <View style={styles.headerRow}>
+                        <View style={styles.titleInfo}>
+                            <ThemedText type="title">{club.name}</ThemedText>
+                            <ThemedText style={[styles.category, { color: tintColor }]}>{club.category}</ThemedText>
+                        </View>
                         <TouchableOpacity
-                            style={[styles.sendButton, { backgroundColor: userBubbleColor }]}
-                            onPress={handleSend}
-                            disabled={!inputText.trim()}
+                            style={[
+                                styles.followButton,
+                                { backgroundColor: isFollowing ? 'transparent' : tintColor, borderColor: tintColor }
+                            ]}
+                            onPress={() => setIsFollowing(!isFollowing)}
                         >
-                            <IconSymbol name="arrow.up" size={20} color="#ffffff" />
+                            <ThemedText style={{ color: isFollowing ? tintColor : '#fff', fontWeight: '600' }}>
+                                {isFollowing ? 'Following' : 'Follow'}
+                            </ThemedText>
                         </TouchableOpacity>
                     </View>
+
+                    <View style={[styles.section, { backgroundColor: cardBg, borderColor }]}>
+                        <ThemedText type="subtitle" style={styles.sectionTitle}>About</ThemedText>
+                        <ThemedText style={styles.description}>{club.description}</ThemedText>
+                    </View>
+
+                    <View style={styles.tagsContainer}>
+                        {club.tags.map((tag) => (
+                            <View key={tag} style={[styles.tag, { backgroundColor: borderColor }]}>
+                                <ThemedText style={styles.tagText}>#{tag}</ThemedText>
+                            </View>
+                        ))}
+                    </View>
+
+                    {club.nextEvent && (
+                        <View style={[styles.section, { backgroundColor: cardBg, borderColor }]}>
+                            <View style={styles.sectionHeader}>
+                                <IconSymbol name="calendar" size={18} color={tintColor} />
+                                <ThemedText type="subtitle" style={styles.sectionTitle}>Next Event</ThemedText>
+                            </View>
+                            <ThemedText style={styles.eventInfo}>{club.nextEvent.time}</ThemedText>
+                            <ThemedText style={[styles.eventLocation, { color: secondaryTextColor }]}>📍 {club.nextEvent.location}</ThemedText>
+                            <TouchableOpacity style={[styles.rsvpButton, { backgroundColor: tintColor }]}>
+                                <ThemedText style={styles.rsvpButtonText}>RSVP via Email</ThemedText>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
+                    <View style={styles.socialSection}>
+                        <ThemedText style={[styles.socialTitle, { color: secondaryTextColor }]}>Connect</ThemedText>
+                        <View style={styles.socialIcons}>
+                            <TouchableOpacity style={[styles.socialIcon, { backgroundColor: cardBg, borderColor }]}>
+                                <IconSymbol name="globe" size={20} color={secondaryTextColor} />
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[styles.socialIcon, { backgroundColor: cardBg, borderColor }]}>
+                                <IconSymbol name="message" size={20} color={secondaryTextColor} />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
                 </View>
-            </KeyboardAvoidingView>
-        </>
+            </ScrollView>
+        </ThemedView>
     );
 }
 
@@ -129,64 +125,123 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
-    messagesContainer: {
+    centerContainer: {
         flex: 1,
-    },
-    messagesContent: {
-        padding: 16,
-        paddingBottom: 8,
-    },
-    messageBubble: {
-        maxWidth: '80%',
-        padding: 12,
-        borderRadius: 16,
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
-    },
-    userBubble: {
-        borderBottomRightRadius: 4,
-    },
-    botBubble: {
-        borderBottomLeftRadius: 4,
-    },
-    messageText: {
-        fontSize: 15,
-        lineHeight: 20,
-        marginBottom: 4,
-    },
-    timestamp: {
-        fontSize: 11,
-        marginTop: 4,
-    },
-    inputContainer: {
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderTopWidth: 1,
-    },
-    inputWrapper: {
-        flexDirection: 'row',
-        alignItems: 'flex-end',
-        borderWidth: 1,
-        borderRadius: 24,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-    },
-    input: {
-        flex: 1,
-        fontSize: 15,
-        maxHeight: 100,
-        paddingVertical: 8,
-    },
-    sendButton: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
         justifyContent: 'center',
         alignItems: 'center',
-        marginLeft: 8,
+    },
+    scrollContent: {
+        paddingBottom: 40,
+    },
+    coverImage: {
+        width: '100%',
+        height: 200,
+    },
+    content: {
+        padding: 20,
+        marginTop: -20,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        backgroundColor: 'transparent',
+    },
+    headerRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 20,
+        paddingTop: 10,
+    },
+    titleInfo: {
+        flex: 1,
+        marginRight: 12,
+    },
+    category: {
+        fontSize: 14,
+        fontWeight: '600',
+        marginTop: 4,
+        textTransform: 'uppercase',
+    },
+    followButton: {
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 20,
+        borderWidth: 1,
+    },
+    section: {
+        padding: 16,
+        borderRadius: 16,
+        borderWidth: 1,
+        marginBottom: 20,
+    },
+    sectionTitle: {
+        marginBottom: 8,
+        fontSize: 18,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginBottom: 8,
+    },
+    description: {
+        fontSize: 15,
+        lineHeight: 22,
+        opacity: 0.9,
+    },
+    tagsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+        marginBottom: 24,
+    },
+    tag: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 12,
+    },
+    tagText: {
+        fontSize: 13,
+        fontWeight: '500',
+    },
+    eventInfo: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 4,
+    },
+    eventLocation: {
+        fontSize: 14,
+        marginBottom: 16,
+    },
+    rsvpButton: {
+        paddingVertical: 12,
+        borderRadius: 12,
+        alignItems: 'center',
+    },
+    rsvpButtonText: {
+        color: '#fff',
+        fontWeight: '700',
+        fontSize: 15,
+    },
+    socialSection: {
+        marginTop: 10,
+    },
+    socialTitle: {
+        fontSize: 12,
+        fontWeight: '600',
+        textTransform: 'uppercase',
+        marginBottom: 12,
+        letterSpacing: 1,
+    },
+    socialIcons: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    socialIcon: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        borderWidth: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });
