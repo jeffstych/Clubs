@@ -47,7 +47,7 @@ export function ClubCard({ club, onFollowChange }: ClubCardProps) {
 
     const checkEventSignUpStatus = async (eventId: string) => {
         if (!session?.user?.id) return;
-        
+
         try {
             const { data: signedUp } = await isSignedUpForEvent(session.user.id, eventId);
             setIsSignedUp(signedUp || false);
@@ -58,7 +58,7 @@ export function ClubCard({ club, onFollowChange }: ClubCardProps) {
 
     const checkFollowStatus = async () => {
         if (!session?.user?.id) return;
-        
+
         try {
             const { data: following } = await isFollowingClub(session.user.id, club.id);
             setIsFollowing(following || false);
@@ -80,15 +80,15 @@ export function ClubCard({ club, onFollowChange }: ClubCardProps) {
     const handleFollowPress = async (e: any) => {
         e.stopPropagation();
         e.preventDefault();
-        
+
         if (!session?.user?.id) {
             // Could navigate to login or show alert
             console.log('User must be logged in to follow clubs');
             return;
         }
-        
+
         setFollowLoading(true);
-        
+
         try {
             if (isFollowing) {
                 const { error } = await unfollowClub(session.user.id, club.id);
@@ -113,16 +113,16 @@ export function ClubCard({ club, onFollowChange }: ClubCardProps) {
     const handleEventSignUp = async (e: any) => {
         e.stopPropagation();
         e.preventDefault();
-        
+
         if (!session?.user?.id) {
             console.log('User must be logged in to sign up for events');
             return;
         }
-        
+
         if (!soonestEvent) return;
-        
+
         setEventLoading(true);
-        
+
         try {
             if (isSignedUp) {
                 const { error } = await removeFromEvent(session.user.id, soonestEvent.event_id);
@@ -151,7 +151,7 @@ export function ClubCard({ club, onFollowChange }: ClubCardProps) {
                 <Image source={{ uri: club.image }} style={styles.image} contentFit="cover" transition={1000} />
                 <View style={styles.content}>
                     <View style={styles.header}>
-                        <ThemedText type="subtitle">{club.name}</ThemedText>
+                        <ThemedText type="subtitle" style={styles.clubName}>{club.name}</ThemedText>
                         <View style={styles.buttonGroup}>
                             <TouchableOpacity
                                 style={{
@@ -253,8 +253,13 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
         marginBottom: 4,
     },
+    clubName: {
+        flex: 1,
+        marginRight: 12,
+    },
     buttonGroup: {
         flexDirection: 'row',
+        flexShrink: 0,
     },
     followButton: {
         paddingHorizontal: 12,
