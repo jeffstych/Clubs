@@ -136,67 +136,71 @@ export default function CalendarScreen() {
                     <>
 
 
-                        {/* Month Header */}
-                        <View style={[styles.monthHeader, { backgroundColor: cardBg }]}>
-                            <TouchableOpacity onPress={goToPreviousMonth} style={styles.navButton}>
-                                <IconSymbol name="chevron.left" size={20} color={iconColor} />
-                            </TouchableOpacity>
-                            <ThemedText type="subtitle">{monthNames[currentMonth]} {currentYear}</ThemedText>
-                            <TouchableOpacity onPress={goToNextMonth} style={styles.navButton}>
-                                <IconSymbol name="chevron.right" size={20} color={iconColor} />
-                            </TouchableOpacity>
-                        </View>
-
-                        {/* Day Labels */}
-                        <View style={styles.dayLabels}>
-                            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                                <View key={day} style={styles.dayLabel}>
-                                    <ThemedText style={styles.dayLabelText}>{day}</ThemedText>
+                        <View style={[styles.calendarHighlight, { backgroundColor: cardBg, borderColor }]}>
+                            {/* Month Header */}
+                            <View style={styles.monthHeader}>
+                                <TouchableOpacity onPress={goToPreviousMonth} style={styles.navButton}>
+                                    <IconSymbol name="chevron.left" size={20} color={iconColor} />
+                                </TouchableOpacity>
+                                <View style={[styles.monthTitleContainer, { borderColor }]}>
+                                    <ThemedText type="subtitle">{monthNames[currentMonth]} {currentYear}</ThemedText>
                                 </View>
-                            ))}
-                        </View>
+                                <TouchableOpacity onPress={goToNextMonth} style={styles.navButton}>
+                                    <IconSymbol name="chevron.right" size={20} color={iconColor} />
+                                </TouchableOpacity>
+                            </View>
 
-                        {/* Calendar Grid */}
-                        <View style={styles.calendarGrid}>
-                            {calendarDays.map((day, index) => {
-                                if (day === null) {
-                                    return <View key={`empty-${index}`} style={styles.dayCell} />;
-                                }
+                            {/* Day Labels */}
+                            <View style={styles.dayLabels}>
+                                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                                    <View key={day} style={styles.dayLabel}>
+                                        <ThemedText style={styles.dayLabelText}>{day}</ThemedText>
+                                    </View>
+                                ))}
+                            </View>
 
-                                const dateStr = formatDate(currentYear, currentMonth, day);
-                                const isSelected = selectedDate === dateStr;
-                                const isToday = day === now.getDate() && currentMonth === now.getMonth();
-                                const hasDot = hasEvents(day);
+                            {/* Calendar Grid */}
+                            <View style={styles.calendarGrid}>
+                                {calendarDays.map((day, index) => {
+                                    if (day === null) {
+                                        return <View key={`empty-${index}`} style={styles.dayCell} />;
+                                    }
 
-                                return (
-                                    <TouchableOpacity
-                                        key={day}
-                                        style={[
-                                            styles.dayCell,
-                                            isSelected && { backgroundColor: selectedBg },
-                                            isToday && !isSelected && { borderColor: iconColor, borderWidth: 1 },
-                                            hasDot && !isSelected && styles.hasEventCell
-                                        ]}
-                                        onPress={() => setSelectedDate(dateStr)}
-                                    >
-                                        <Text style={[
-                                            styles.dayText,
-                                            { color: isSelected ? '#fff' : textColor },
-                                            isToday && !isSelected && { color: iconColor, fontWeight: '700' }
-                                        ]}>
-                                            {day}
-                                        </Text>
-                                        <View style={styles.dotContainer}>
-                                            {hasDot && (
-                                                <View style={[
-                                                    styles.eventDot,
-                                                    { backgroundColor: isSelected ? '#fff' : dotColor }
-                                                ]} />
-                                            )}
-                                        </View>
-                                    </TouchableOpacity>
-                                );
-                            })}
+                                    const dateStr = formatDate(currentYear, currentMonth, day);
+                                    const isSelected = selectedDate === dateStr;
+                                    const isToday = day === now.getDate() && currentMonth === now.getMonth();
+                                    const hasDot = hasEvents(day);
+
+                                    return (
+                                        <TouchableOpacity
+                                            key={day}
+                                            style={[
+                                                styles.dayCell,
+                                                isSelected && { backgroundColor: selectedBg },
+                                                isToday && !isSelected && { borderColor: iconColor, borderWidth: 1 },
+                                                hasDot && !isSelected && styles.hasEventCell
+                                            ]}
+                                            onPress={() => setSelectedDate(dateStr)}
+                                        >
+                                            <Text style={[
+                                                styles.dayText,
+                                                { color: isSelected ? '#fff' : textColor },
+                                                isToday && !isSelected && { color: iconColor, fontWeight: '700' }
+                                            ]}>
+                                                {day}
+                                            </Text>
+                                            <View style={styles.dotContainer}>
+                                                {hasDot && (
+                                                    <View style={[
+                                                        styles.eventDot,
+                                                        { backgroundColor: isSelected ? '#fff' : dotColor }
+                                                    ]} />
+                                                )}
+                                            </View>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </View>
                         </View>
 
                         {/* Selected Date Events */}
@@ -265,13 +269,31 @@ const styles = StyleSheet.create({
         opacity: 0.7,
         marginTop: 40,
     },
+    calendarHighlight: {
+        padding: 12,
+        borderRadius: 20,
+        borderWidth: 1,
+        marginBottom: 24,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+        elevation: 2,
+    },
     monthHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 12,
-        borderRadius: 8,
-        marginBottom: 16,
+        paddingVertical: 8,
+        marginBottom: 12,
+    },
+    monthTitleContainer: {
+        paddingHorizontal: 16,
+        paddingVertical: 6,
+        borderRadius: 12,
+        borderWidth: 1,
+        minWidth: 160,
+        alignItems: 'center',
     },
     navButton: {
         padding: 8,
