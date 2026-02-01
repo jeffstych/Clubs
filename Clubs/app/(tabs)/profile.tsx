@@ -33,7 +33,7 @@ export default function ProfilePage() {
 
     try {
       setLoading(true);
-      
+
       // Get user preferences
       const { data: prefsData } = await getUserPreferenceTags(session.user.id);
       if (prefsData) {
@@ -93,6 +93,7 @@ export default function ProfilePage() {
 
   const menuItems = [
     { icon: 'gearshape.fill', label: 'Settings', href: '/settings' },
+    { icon: 'sparkles', label: 'Edit Preferences', href: '/edit-preferences' },
   ];
 
   return (
@@ -152,6 +153,7 @@ export default function ProfilePage() {
                   borderBottomLeftRadius: isLast ? 12 : 0,
                   borderBottomRightRadius: isLast ? 12 : 0,
                   borderTopWidth: isFirst ? 1 : 0,
+                  marginBottom: isLast ? 0 : 0, // Keep them together
                 }}
               >
                 <View style={styles.menuItemLeft}>
@@ -162,24 +164,6 @@ export default function ProfilePage() {
               </TouchableOpacity>
             );
           })}
-
-          <TouchableOpacity
-            onPress={() => router.push('/edit-preferences')}
-            style={{
-              ...styles.menuItem,
-              backgroundColor: itemBg,
-              borderTopColor: borderColor,
-              borderBottomColor: borderColor,
-              borderLeftColor: borderColor,
-              borderRightColor: borderColor,
-            }}
-          >
-            <View style={styles.menuItemLeft}>
-              <ThemedText style={styles.emojiIcon}>🎯</ThemedText>
-              <ThemedText style={styles.menuLabel}>Edit Preferences</ThemedText>
-            </View>
-            <IconSymbol name="chevron.right" size={16} color={secondaryTextColor} />
-          </TouchableOpacity>
 
           <TouchableOpacity
             style={{
@@ -201,6 +185,10 @@ export default function ProfilePage() {
         </View>
       </ScrollView>
     </ThemedView>
+  );
+}
+      </ScrollView >
+    </ThemedView >
   );
 }
 
