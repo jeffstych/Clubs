@@ -6,9 +6,8 @@ import { ThemedView } from '@/components/themed-view';
 import { Club } from '@/data/clubs';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { useEvents } from '@/context/EventContext';
 import { useAuth } from '@/context/AuthContext';
-import { followClub, unfollowClub, isFollowingClub } from '@/lib/supabase';
+import { followClub, unfollowClub, isFollowingClub, getSoonestEventForClub, signUpForEvent, removeFromEvent, isSignedUpForEvent } from '@/lib/supabase';
 import { useState, useEffect } from 'react';
 
 interface ClubCardProps {
@@ -18,18 +17,44 @@ interface ClubCardProps {
 
 export function ClubCard({ club, onFollowChange }: ClubCardProps) {
     const { session } = useAuth();
-    const { addEvent, removeEvent, isEventAdded } = useEvents();
     const [isFollowing, setIsFollowing] = useState(false);
     const [followLoading, setFollowLoading] = useState(false);
-    
-    const eventAdded = club.nextEvent ? isEventAdded(club.id) : false;
+    const [soonestEvent, setSoonestEvent] = useState<any>(null);
+    const [isSignedUp, setIsSignedUp] = useState(false);
+    const [eventLoading, setEventLoading] = useState(false);
 
-    // Check if user is following this club on mount
+    // Check if user is following this club and load event data on mount
     useEffect(() => {
         if (session?.user?.id) {
             checkFollowStatus();
         }
+        loadSoonestEvent();
     }, [session, club.id]);
+
+    const loadSoonestEvent = async () => {
+        try {
+            const { data: event } = await getSoonestEventForClub(club.id);
+            if (event) {
+                setSoonestEvent(event);
+                if (session?.user?.id) {
+                    checkEventSignUpStatus(event.event_id);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading soonest event:', error);
+        }
+    };
+
+    const checkEventSignUpStatus = async (eventId: string) => {
+        if (!session?.user?.id) return;
+        
+        try {
+            const { data: signedUp } = await isSignedUpForEvent(session.user.id, eventId);
+            setIsSignedUp(signedUp || false);
+        } catch (error) {
+            console.error('Error checking event signup status:', error);
+        }
+    };
 
     const checkFollowStatus = async () => {
         if (!session?.user?.id) return;
@@ -85,29 +110,35 @@ export function ClubCard({ club, onFollowChange }: ClubCardProps) {
         }
     };
 
-    const handleAddEvent = (e: any) => {
+    const handleEventSignUp = async (e: any) => {
         e.stopPropagation();
         e.preventDefault();
-        if (!club.nextEvent) return;
-
-        if (eventAdded) {
-            removeEvent(club.id);
-        } else {
-            // Calculate next Tuesday for demo
-            const today = new Date();
-            const daysUntilTuesday = (2 - today.getDay() + 7) % 7 || 7;
-            const nextTuesday = new Date(today);
-            nextTuesday.setDate(today.getDate() + daysUntilTuesday);
-            const dateStr = nextTuesday.toISOString().split('T')[0];
-
-            addEvent({
-                id: club.id,
-                clubId: club.id,
-                clubName: club.name,
-                time: club.nextEvent.time,
-                location: club.nextEvent.location,
-                date: dateStr,
-            });
+        
+        if (!session?.user?.id) {
+            console.log('User must be logged in to sign up for events');
+            return;
+        }
+        
+        if (!soonestEvent) return;
+        
+        setEventLoading(true);
+        
+        try {
+            if (isSignedUp) {
+                const { error } = await removeFromEvent(session.user.id, soonestEvent.event_id);
+                if (!error) {
+                    setIsSignedUp(false);
+                }
+            } else {
+                const { error } = await signUpForEvent(session.user.id, soonestEvent.event_id);
+                if (!error) {
+                    setIsSignedUp(true);
+                }
+            }
+        } catch (error) {
+            console.error('Error updating event signup status:', error);
+        } finally {
+            setEventLoading(false);
         }
     };
 
@@ -143,25 +174,35 @@ export function ClubCard({ club, onFollowChange }: ClubCardProps) {
                     <ThemedText numberOfLines={2} style={styles.description}>
                         {club.description}
                     </ThemedText>
-                    {club.nextEvent && (
+                    {soonestEvent && (
                         <View style={{ ...styles.eventStrip, backgroundColor: eventBgColor }}>
                             <IconSymbol name="sparkles" size={14} color={iconColor} style={styles.eventIcon} />
-                            <ThemedText style={styles.eventText}>
-                                Next: {club.nextEvent.time} @ {club.nextEvent.location}
-                            </ThemedText>
+                            <View style={styles.eventInfo}>
+                                <ThemedText style={styles.eventTitle}>
+                                    {soonestEvent.event_title}
+                                </ThemedText>
+                                <ThemedText style={styles.eventDetails}>
+                                    {new Date(soonestEvent.event_date).toLocaleDateString()} at {soonestEvent.event_time}
+                                </ThemedText>
+                                <ThemedText style={styles.eventDetails}>
+                                    {soonestEvent.location}
+                                </ThemedText>
+                            </View>
                             <TouchableOpacity
                                 style={{
                                     ...styles.addEventButton,
-                                    backgroundColor: eventAdded ? iconColor : 'transparent',
+                                    backgroundColor: isSignedUp ? iconColor : 'transparent',
                                     borderColor: iconColor,
                                     borderWidth: 1,
+                                    opacity: eventLoading ? 0.7 : 1,
                                 }}
-                                onPress={handleAddEvent}
+                                onPress={handleEventSignUp}
+                                disabled={eventLoading}
                             >
                                 <IconSymbol
-                                    name={eventAdded ? "checkmark" : "plus"}
+                                    name={eventLoading ? "ellipsis" : isSignedUp ? "checkmark" : "plus"}
                                     size={12}
-                                    color={eventAdded ? '#fff' : iconColor}
+                                    color={isSignedUp ? '#fff' : iconColor}
                                 />
                             </TouchableOpacity>
                         </View>
@@ -249,10 +290,25 @@ const styles = StyleSheet.create({
     },
     eventStrip: {
         flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 6,
+        alignItems: 'flex-start',
+        paddingVertical: 8,
         paddingHorizontal: 10,
         borderRadius: 8,
+        marginBottom: 8,
+    },
+    eventInfo: {
+        flex: 1,
+        marginRight: 8,
+    },
+    eventTitle: {
+        fontSize: 13,
+        fontWeight: '600',
+        marginBottom: 2,
+    },
+    eventDetails: {
+        fontSize: 11,
+        opacity: 0.8,
+        marginBottom: 1,
     },
     addEventButton: {
         marginLeft: 'auto',
@@ -264,9 +320,6 @@ const styles = StyleSheet.create({
     },
     eventIcon: {
         marginRight: 6,
-    },
-    eventText: {
-        fontSize: 12,
-        fontWeight: '500',
+        marginTop: 1,
     },
 });

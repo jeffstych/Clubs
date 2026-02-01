@@ -1,22 +1,70 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
-import { useEvents } from '@/context/EventContext';
+import { useAuth } from '@/context/AuthContext';
+import { getUserSignedUpEvents } from '@/lib/supabase';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function CalendarScreen() {
-    const { events } = useEvents();
+    const { session } = useAuth();
+    const [events, setEvents] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
     const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+
+    // Load user's signed up events
+    const loadUserEvents = async () => {
+        if (!session?.user?.id) {
+            setEvents([]);
+            setLoading(false);
+            return;
+        }
+        
+        try {
+            setLoading(true);
+            const { data: userEvents } = await getUserSignedUpEvents(session.user.id);
+            if (userEvents) {
+                // Transform events to match calendar format
+                const transformedEvents = userEvents.map((event: any) => ({
+                    id: event.event_id,
+                    clubName: event.club_name,
+                    title: event.event_title,
+                    time: event.event_time,
+                    location: event.location,
+                    date: event.event_date,
+                    description: event.event_description
+                }));
+                setEvents(transformedEvents);
+            }
+        } catch (error) {
+            console.error('Error loading user events:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Load events when component mounts
+    useEffect(() => {
+        loadUserEvents();
+    }, [session]);
+
+    // Reload events when tab is focused
+    useFocusEffect(
+        React.useCallback(() => {
+            loadUserEvents();
+        }, [session])
+    );
 
     const cardBg = useThemeColor({ light: '#ffffff', dark: '#151718' }, 'background');
     const iconColor = useThemeColor({ light: '#3c823c', dark: '#fff' }, 'tint');
     const textColor = useThemeColor({ light: '#062406', dark: '#fff' }, 'text');
     const borderColor = useThemeColor({ light: '#e0e0e0', dark: '#333' }, 'icon');
     const dotColor = useThemeColor({ light: '#3c823c', dark: '#fff' }, 'tint');
+    const selectedBg = useThemeColor({ light: '#3c823c', dark: '#3c823c' }, 'tint');
 
     // Get current month info
     const now = new Date();
@@ -67,7 +115,9 @@ export default function CalendarScreen() {
 
     // Get events for selected date
     const selectedEvents = selectedDate
-        ? events.filter(e => e.date === selectedDate)
+        ? events
+            .filter(e => e.date === selectedDate)
+            .sort((a, b) => a.time.localeCompare(b.time)) // Sort by time
         : [];
 
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -76,7 +126,14 @@ export default function CalendarScreen() {
     return (
         <ThemedView style={styles.container}>
             <ScrollView contentContainerStyle={styles.content}>
-                <ThemedText type="title" style={styles.title}>Calendar</ThemedText>
+                <ThemedText type="title" style={styles.title}>My Calendar</ThemedText>
+                
+                {loading ? (
+                    <ThemedText style={styles.loadingText}>Loading your events...</ThemedText>
+                ) : !session ? (
+                    <ThemedText style={styles.noEventsText}>Please sign in to see your calendar</ThemedText>
+                ) : (
+                    <>
 
 
                 {/* Month Header */}
@@ -116,8 +173,9 @@ export default function CalendarScreen() {
                                 key={day}
                                 style={[
                                     styles.dayCell,
-                                    isSelected && { backgroundColor: iconColor },
-                                    isToday && !isSelected && { borderColor: iconColor, borderWidth: 1 }
+                                    isSelected && { backgroundColor: selectedBg },
+                                    isToday && !isSelected && { borderColor: iconColor, borderWidth: 1 },
+                                    hasDot && !isSelected && { borderColor: '#fff', borderWidth: 1 }
                                 ]}
                                 onPress={() => setSelectedDate(dateStr)}
                             >
@@ -151,9 +209,14 @@ export default function CalendarScreen() {
                                     <View key={event.id} style={[styles.eventCard, { backgroundColor: cardBg }]}>
                                         <View style={styles.eventHeader}>
                                             <IconSymbol name="calendar" size={20} color={iconColor} />
-                                            <ThemedText type="defaultSemiBold" style={styles.eventClubName}>
-                                                {event.clubName}
-                                            </ThemedText>
+                                            <View style={styles.eventHeaderText}>
+                                                <ThemedText type="defaultSemiBold" style={styles.eventTitle}>
+                                                    {event.title}
+                                                </ThemedText>
+                                                <ThemedText style={styles.eventClubName}>
+                                                    {event.clubName}
+                                                </ThemedText>
+                                            </View>
                                         </View>
                                         <View style={styles.eventDetails}>
                                             <IconSymbol name="clock" size={14} color={iconColor} style={styles.detailIcon} />
@@ -168,6 +231,8 @@ export default function CalendarScreen() {
                             </View>
                         )}
                     </View>
+                )}
+                    </>
                 )}
             </ScrollView>
         </ThemedView>
@@ -184,6 +249,16 @@ const styles = StyleSheet.create({
     },
     title: {
         marginBottom: 16,
+    },
+    loadingText: {
+        textAlign: 'center',
+        opacity: 0.7,
+        marginTop: 40,
+    },
+    noEventsText: {
+        textAlign: 'center',
+        opacity: 0.7,
+        marginTop: 40,
     },
     monthHeader: {
         flexDirection: 'row',
@@ -259,12 +334,20 @@ const styles = StyleSheet.create({
     },
     eventHeader: {
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         marginBottom: 12,
         gap: 8,
     },
-    eventClubName: {
+    eventHeaderText: {
+        flex: 1,
+    },
+    eventTitle: {
         fontSize: 16,
+        marginBottom: 2,
+    },
+    eventClubName: {
+        fontSize: 14,
+        opacity: 0.8,
     },
     eventDetails: {
         flexDirection: 'row',
