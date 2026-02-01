@@ -1,112 +1,272 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
+import { useState, useMemo } from 'react';
+import { StyleSheet, ScrollView, TouchableOpacity, FlatList, View, TextInput, Pressable } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { ClubCard } from '@/components/club-card';
+import { CLUBS, Club } from '@/data/clubs';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
 
-export default function TabTwoScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
-  );
+export default function ForYouScreen() {
+    const [selectedTags, setSelectedTags] = useState<string[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+
+    const activeTagColor = useThemeColor({ light: '#fff', dark: '#062406' }, 'tint'); // Text on active tag
+    const inactiveTagColor = useThemeColor({ light: '#687076', dark: '#9BA1A6' }, 'text');
+
+    // Glass effect colors
+    const activeBgColor = useThemeColor({ light: '#3c823c', dark: '#ffffff' }, 'tint');
+    const inactiveBgColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.05)', dark: 'rgba(255, 255, 255, 0.1)' }, 'background');
+    const inputBgColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.03)', dark: 'rgba(255, 255, 255, 0.05)' }, 'background');
+    const borderColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.1)', dark: 'rgba(255, 255, 255, 0.2)' }, 'icon');
+    const searchTextColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
+
+    // Extract all unique tags and categories from clubs
+    const allTags = useMemo(() => {
+        const tags = new Set<string>();
+        CLUBS.forEach((club) => club.tags.forEach((tag) => tags.add(tag)));
+        return Array.from(tags).sort();
+    }, []);
+
+    const allCategories = useMemo(() => {
+        const categories = new Set<string>(CLUBS.map(c => c.category));
+        return Array.from(categories).sort();
+    }, []);
+
+    // Sorting and Filtering Logic
+    const sortedClubs = useMemo(() => {
+        let filtered = CLUBS;
+
+        // Filter by Search Query
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase();
+            filtered = filtered.filter(club =>
+                club.name.toLowerCase().includes(query) ||
+                club.description.toLowerCase().includes(query)
+            );
+        }
+
+        // Filter by Category
+        if (selectedCategory) {
+            filtered = filtered.filter(club => club.category === selectedCategory);
+        }
+
+        if (selectedTags.length === 0) return filtered;
+
+        return [...filtered].map((club) => {
+            // Calculate a relevance score
+            let score = 0;
+            club.tags.forEach((tag) => {
+                if (selectedTags.includes(tag)) {
+                    score += 1;
+                }
+            });
+            return { ...club, score };
+        }).sort((a, b) => {
+            // Sort by score descending
+            if (b.score !== a.score) {
+                return b.score - a.score;
+            }
+            // Fallback to name
+            return a.name.localeCompare(b.name);
+        });
+    }, [selectedTags, searchQuery, selectedCategory]);
+
+    const toggleTag = (tag: string) => {
+        setSelectedTags((prev) =>
+            prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+        );
+    };
+
+    return (
+        <ThemedView style={styles.container}>
+            <FlatList
+                data={sortedClubs}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => <ClubCard club={item} />}
+                contentContainerStyle={styles.contentContainer}
+                ListHeaderComponent={
+                    <>
+                        <ThemedView style={styles.header}>
+                            <ThemedText type="title">For You</ThemedText>
+                            <ThemedText style={styles.subtitle}>
+                                Select your interests to get personalized club recommendations.
+                            </ThemedText>
+                        </ThemedView>
+
+                        {/* Search Bar */}
+                        <View style={[styles.searchContainer, { backgroundColor: inputBgColor }]}>
+                            <IconSymbol name="magnifyingglass" size={20} color={inactiveTagColor} />
+                            <TextInput
+                                style={[styles.searchInput, { color: searchTextColor }]}
+                                placeholder="Search clubs..."
+                                placeholderTextColor={inactiveTagColor}
+                                value={searchQuery}
+                                onChangeText={setSearchQuery}
+                            />
+                        </View>
+
+                        {/* Category Dropdown */}
+                        <View style={styles.controlsSection}>
+                            <Pressable
+                                style={[
+                                    styles.dropdownButton,
+                                    { borderColor: borderColor, backgroundColor: inputBgColor }
+                                ]}
+                                onPress={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                            >
+                                <ThemedText style={styles.dropdownButtonText}>
+                                    {selectedCategory ? selectedCategory : "All Categories"}
+                                </ThemedText>
+                                <IconSymbol
+                                    name="chevron.down"
+                                    size={16}
+                                    color={inactiveTagColor}
+                                    style={{ transform: [{ rotate: showCategoryDropdown ? '180deg' : '0deg' }] }}
+                                />
+                            </Pressable>
+
+                            {showCategoryDropdown && (
+                                <View style={[styles.dropdownMenu, { backgroundColor: inputBgColor, borderColor }]}>
+                                    <Pressable
+                                        style={[styles.dropdownItem, !selectedCategory && styles.dropdownItemSelected]}
+                                        onPress={() => {
+                                            setSelectedCategory(null);
+                                            setShowCategoryDropdown(false);
+                                        }}
+                                    >
+                                        <ThemedText>All Categories</ThemedText>
+                                    </Pressable>
+                                    {allCategories.map(cat => (
+                                        <Pressable
+                                            key={cat}
+                                            style={[styles.dropdownItem, selectedCategory === cat && styles.dropdownItemSelected]}
+                                            onPress={() => {
+                                                setSelectedCategory(cat);
+                                                setShowCategoryDropdown(false);
+                                            }}
+                                        >
+                                            <ThemedText>{cat}</ThemedText>
+                                        </Pressable>
+                                    ))}
+                                </View>
+                            )}
+                        </View>
+
+                        <View style={styles.tagsSection}>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tagsScroll}>
+                                {allTags.map((tag) => {
+                                    const isActive = selectedTags.includes(tag);
+                                    return (
+                                        <TouchableOpacity
+                                            key={tag}
+                                            style={[
+                                                styles.tag,
+                                                { backgroundColor: isActive ? activeBgColor : inactiveBgColor },
+                                            ]}
+                                            onPress={() => toggleTag(tag)}>
+                                            <ThemedText
+                                                style={[
+                                                    styles.tagText,
+                                                    { color: isActive ? activeTagColor : inactiveTagColor, fontWeight: isActive ? '600' : '400' },
+                                                ]}>
+                                                {tag}
+                                            </ThemedText>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </ScrollView>
+                        </View>
+                        <ThemedText type="subtitle" style={styles.sectionTitle}>
+                            {selectedTags.length > 0 ? "Recommended Clubs" : "All Clubs"}
+                        </ThemedText>
+                    </>
+                }
+            />
+        </ThemedView>
+    );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
+    container: {
+        flex: 1,
+    },
+    contentContainer: {
+        padding: 16,
+        paddingTop: 60, // Add padding for status bar / header
+    },
+    header: {
+        marginBottom: 16,
+    },
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        borderRadius: 12,
+        marginBottom: 16,
+    },
+    searchInput: {
+        flex: 1,
+        marginLeft: 8,
+        fontSize: 16,
+    },
+    controlsSection: {
+        marginBottom: 20,
+        zIndex: 10, // Ensure dropdown flows over other elements if absolute (but we are using stacking flow)
+    },
+    dropdownButton: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 12,
+        borderRadius: 12,
+        borderWidth: 1,
+    },
+    dropdownButtonText: {
+        fontSize: 15,
+        fontWeight: '500',
+    },
+    dropdownMenu: {
+        marginTop: 8,
+        borderRadius: 12,
+        borderWidth: 1,
+        overflow: 'hidden',
+    },
+    dropdownItem: {
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: '#ccc',
+    },
+    dropdownItemSelected: {
+        backgroundColor: 'rgba(60, 130, 60, 0.1)', // Lighter green tint
+    },
+    subtitle: {
+        marginTop: 8,
+        fontSize: 16,
+        opacity: 0.7,
+    },
+    tagsSection: {
+        marginBottom: 24,
+    },
+    tagsScroll: {
+        gap: 8,
+        paddingRight: 16,
+    },
+    tag: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        marginRight: 8,
+    },
+    tagText: {
+        fontSize: 14,
+        textTransform: 'capitalize',
+    },
+    sectionTitle: {
+        marginBottom: 12,
+    },
 });
