@@ -66,7 +66,7 @@ export function ClubCard({ club }: ClubCardProps) {
     };
 
     return (
-        <Pressable onPress={() => router.push(`/clubs/${club.id}` as any)}>
+        <View>
             <ThemedView style={{ ...styles.card, backgroundColor: cardBackgroundColor }}>
                 <Image source={{ uri: club.image }} style={styles.image} contentFit="cover" transition={1000} />
                 <View style={styles.content}>
@@ -87,18 +87,6 @@ export function ClubCard({ club }: ClubCardProps) {
                                     color: following ? followBtnBg : followBtnText,
                                 }}>
                                     {following ? 'Following' : 'Follow'}
-                                </ThemedText>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={{
-                                    ...styles.viewMoreButton,
-                                    borderColor: followBtnBg,
-                                    borderWidth: 1,
-                                }}
-                                onPress={() => { }}
-                            >
-                                <ThemedText style={{ ...styles.viewMoreButtonText, color: followBtnBg }}>
-                                    View More
                                 </ThemedText>
                             </TouchableOpacity>
                         </View>
@@ -145,7 +133,7 @@ export function ClubCard({ club }: ClubCardProps) {
                     </View>
                 </View>
             </ThemedView>
-        </Pressable>
+        </View>
     );
 }
 
@@ -183,16 +171,6 @@ const styles = StyleSheet.create({
         marginRight: 8,
     },
     followButtonText: {
-        fontSize: 12,
-        fontWeight: '600',
-    },
-    viewMoreButton: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 20,
-        backgroundColor: 'transparent',
-    },
-    viewMoreButtonText: {
         fontSize: 12,
         fontWeight: '600',
     },
