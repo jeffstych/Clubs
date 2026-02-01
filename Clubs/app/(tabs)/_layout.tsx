@@ -58,12 +58,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="message" color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="index"
-        options={{
-          href: null,
-        }}
-      />
     </Tabs>
 
   );
@@ -156,7 +150,7 @@ const styles = StyleSheet.create({
   },
   mainBubble: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(20, 22, 23, 0.9)',
+    backgroundColor: 'rgba(20, 22, 23, 0.7)',
     borderRadius: 35,
     paddingHorizontal: 10,
     paddingVertical: 10,
@@ -170,7 +164,7 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   askBubble: {
-    backgroundColor: 'rgba(20, 22, 23, 0.9)',
+    backgroundColor: 'rgba(20, 22, 23, 0.7)',
     borderRadius: 35,
     paddingHorizontal: 15,
     paddingVertical: 10,
