@@ -1,257 +1,129 @@
-import { useState, useMemo } from 'react';
-import { StyleSheet, ScrollView, TouchableOpacity, FlatList, View, TextInput, Pressable } from 'react-native';
-import { ThemedText } from '@/components/themed-text';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { useState, useRef } from 'react';
 import { ThemedView } from '@/components/themed-view';
-import { ClubCard } from '@/components/club-card';
-import { CLUBS, Club } from '@/data/clubs';
+import { ThemedText } from '@/components/themed-text';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 
-export default function ForYouScreen() {
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
-  const [sortBy, setSortBy] = useState<'name' | 'category' | 'default'>('default');
-  const [showSortDropdown, setShowSortDropdown] = useState(false);
+interface Message {
+  id: string;
+  text: string;
+  isUser: boolean;
+  timestamp: Date;
+}
 
-  const activeTagColor = useThemeColor({ light: '#fff', dark: '#062406' }, 'tint'); // Text on active tag
-  const inactiveTagColor = useThemeColor({ light: '#687076', dark: '#9BA1A6' }, 'text');
+export default function HomeScreen() {
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '1',
+      text: `Hello! I'm your club discovery assistant. Ask me anything about clubs, events, or how to get involved on campus!`,
+      isUser: false,
+      timestamp: new Date(),
+    },
+  ]);
+  const [inputText, setInputText] = useState('');
+  const scrollViewRef = useRef<ScrollView>(null);
 
-  // Glass effect colors
-  const activeBgColor = useThemeColor({ light: '#3c823c', dark: '#ffffff' }, 'tint');
-  const inactiveBgColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.05)', dark: 'rgba(255, 255, 255, 0.1)' }, 'background');
-  const inputBgColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.03)', dark: 'rgba(255, 255, 255, 0.05)' }, 'background');
-  const borderColor = useThemeColor({ light: 'rgba(6, 36, 6, 0.1)', dark: 'rgba(255, 255, 255, 0.2)' }, 'icon');
-  const searchTextColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
+  const bgColor = useThemeColor({ light: '#f9fafb', dark: '#0a0a0a' }, 'background');
+  const userBubbleColor = useThemeColor({ light: '#3c823c', dark: '#3c823c' }, 'tint');
+  const botBubbleColor = useThemeColor({ light: '#ffffff', dark: '#1f1f1f' }, 'background');
+  const inputBgColor = useThemeColor({ light: '#ffffff', dark: '#1f1f1f' }, 'background');
+  const borderColor = useThemeColor({ light: '#e5e7eb', dark: '#2f2f2f' }, 'icon');
 
-  // Extract all unique tags and categories from clubs
-  const allTags = useMemo(() => {
-    const tags = new Set<string>();
-    CLUBS.forEach((club) => club.tags.forEach((tag) => tags.add(tag)));
-    return Array.from(tags).sort();
-  }, []);
+  const handleSend = () => {
+    if (!inputText.trim()) return;
 
-  const allCategories = useMemo(() => {
-    const categories = new Set<string>(CLUBS.map(c => c.category));
-    return Array.from(categories).sort();
-  }, []);
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      text: inputText,
+      isUser: true,
+      timestamp: new Date(),
+    };
 
-  // Sorting and Filtering Logic
-  const sortedClubs = useMemo(() => {
-    let filtered = CLUBS;
+    setMessages((prev) => [...prev, newMessage]);
+    setInputText('');
 
-    // Filter by Search Query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(club =>
-        club.name.toLowerCase().includes(query) ||
-        club.description.toLowerCase().includes(query)
-      );
-    }
-
-    // Filter by Category
-    if (selectedCategory) {
-      filtered = filtered.filter(club => club.category === selectedCategory);
-    }
-
-    if (selectedTags.length === 0) {
-      // No tags selected, apply sort directly
-      if (sortBy === 'name') {
-        return [...filtered].sort((a, b) => a.name.localeCompare(b.name));
-      } else if (sortBy === 'category') {
-        return [...filtered].sort((a, b) => a.category.localeCompare(b.category));
-      }
-      return filtered;
-    }
-
-    return [...filtered].map((club) => {
-      // Calculate a relevance score
-      let score = 0;
-      club.tags.forEach((tag) => {
-        if (selectedTags.includes(tag)) {
-          score += 1;
-        }
-      });
-      return { ...club, score };
-    }).sort((a, b) => {
-      // Sort by score descending
-      if (b.score !== a.score) {
-        return b.score - a.score;
-      }
-      // Apply secondary sort
-      if (sortBy === 'name') {
-        return a.name.localeCompare(b.name);
-      } else if (sortBy === 'category') {
-        return a.category.localeCompare(b.category);
-      }
-      return a.name.localeCompare(b.name);
-    });
-  }, [selectedTags, searchQuery, selectedCategory, sortBy]);
-
-  const toggleTag = (tag: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-    );
+    // Simulate bot response
+    setTimeout(() => {
+      const botResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "I'm a demo chatbot! In a real implementation, I would help you discover clubs and answer your questions.",
+        isUser: false,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, botResponse]);
+    }, 1000);
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <FlatList
-        data={sortedClubs}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <ClubCard club={item} />}
-        contentContainerStyle={styles.contentContainer}
-        ListHeaderComponent={
-          <>
-            <ThemedView style={styles.header}>
-              <ThemedText type="title">For You</ThemedText>
-              <ThemedText style={styles.subtitle}>
-                Select your interests to get personalized club recommendations.
-              </ThemedText>
-            </ThemedView>
-
-            {/* Search Bar */}
-            <View style={[styles.searchContainer, { backgroundColor: inputBgColor }]}>
-              <IconSymbol name="magnifyingglass" size={20} color={inactiveTagColor} />
-              <TextInput
-                style={[styles.searchInput, { color: searchTextColor }]}
-                placeholder="Search clubs..."
-                placeholderTextColor={inactiveTagColor}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
-            </View>
-
-            {/* Category Dropdown */}
-            <View style={styles.controlsSection}>
-              <Pressable
-                style={[
-                  styles.dropdownButton,
-                  { borderColor: borderColor, backgroundColor: inputBgColor }
-                ]}
-                onPress={() => setShowCategoryDropdown(!showCategoryDropdown)}
-              >
-                <ThemedText style={styles.dropdownButtonText}>
-                  {selectedCategory ? selectedCategory : "All Categories"}
-                </ThemedText>
-                <IconSymbol
-                  name="chevron.down"
-                  size={16}
-                  color={inactiveTagColor}
-                  style={{ transform: [{ rotate: showCategoryDropdown ? '180deg' : '0deg' }] }}
-                />
-              </Pressable>
-
-              {showCategoryDropdown && (
-                <View style={[styles.dropdownMenu, { backgroundColor: inputBgColor, borderColor }]}>
-                  <Pressable
-                    style={[styles.dropdownItem, !selectedCategory && styles.dropdownItemSelected]}
-                    onPress={() => {
-                      setSelectedCategory(null);
-                      setShowCategoryDropdown(false);
-                    }}
-                  >
-                    <ThemedText>All Categories</ThemedText>
-                  </Pressable>
-                  {allCategories.map(cat => (
-                    <Pressable
-                      key={cat}
-                      style={[styles.dropdownItem, selectedCategory === cat && styles.dropdownItemSelected]}
-                      onPress={() => {
-                        setSelectedCategory(cat);
-                        setShowCategoryDropdown(false);
-                      }}
-                    >
-                      <ThemedText>{cat}</ThemedText>
-                    </Pressable>
-                  ))}
-                </View>
-              )}
-
-              {/* Sort Dropdown */}
-              <Pressable
-                style={[
-                  styles.dropdownButton,
-                  { borderColor: borderColor, backgroundColor: inputBgColor, marginTop: 12 }
-                ]}
-                onPress={() => setShowSortDropdown(!showSortDropdown)}
-              >
-                <ThemedText style={styles.dropdownButtonText}>
-                  Sort: {sortBy === 'name' ? 'A-Z' : sortBy === 'category' ? 'Category' : 'Default'}
-                </ThemedText>
-                <IconSymbol
-                  name="chevron.down"
-                  size={16}
-                  color={inactiveTagColor}
-                  style={{ transform: [{ rotate: showSortDropdown ? '180deg' : '0deg' }] }}
-                />
-              </Pressable>
-
-              {showSortDropdown && (
-                <View style={[styles.dropdownMenu, { backgroundColor: inputBgColor, borderColor }]}>
-                  <Pressable
-                    style={[styles.dropdownItem, sortBy === 'default' && styles.dropdownItemSelected]}
-                    onPress={() => {
-                      setSortBy('default');
-                      setShowSortDropdown(false);
-                    }}
-                  >
-                    <ThemedText>Default</ThemedText>
-                  </Pressable>
-                  <Pressable
-                    style={[styles.dropdownItem, sortBy === 'name' && styles.dropdownItemSelected]}
-                    onPress={() => {
-                      setSortBy('name');
-                      setShowSortDropdown(false);
-                    }}
-                  >
-                    <ThemedText>A-Z</ThemedText>
-                  </Pressable>
-                  <Pressable
-                    style={[styles.dropdownItem, sortBy === 'category' && styles.dropdownItemSelected]}
-                    onPress={() => {
-                      setSortBy('category');
-                      setShowSortDropdown(false);
-                    }}
-                  >
-                    <ThemedText>Category</ThemedText>
-                  </Pressable>
-                </View>
-              )}
-            </View>
-
-            <View style={styles.tagsSection}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tagsScroll}>
-                {allTags.map((tag) => {
-                  const isActive = selectedTags.includes(tag);
-                  return (
-                    <TouchableOpacity
-                      key={tag}
-                      style={[
-                        styles.tag,
-                        { backgroundColor: isActive ? activeBgColor : inactiveBgColor },
-                      ]}
-                      onPress={() => toggleTag(tag)}>
-                      <ThemedText
-                        style={[
-                          styles.tagText,
-                          { color: isActive ? activeTagColor : inactiveTagColor, fontWeight: isActive ? '600' : '400' },
-                        ]}>
-                        {tag}
-                      </ThemedText>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            </View>
-            <ThemedText type="subtitle" style={styles.sectionTitle}>
-              {selectedTags.length > 0 ? "Recommended Clubs" : "All Clubs"}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={[styles.container, { backgroundColor: bgColor }]}
+      keyboardVerticalOffset={90}
+    >
+      {/* Chat Messages */}
+      <ScrollView
+        ref={scrollViewRef}
+        style={styles.messagesContainer}
+        contentContainerStyle={styles.messagesContent}
+        onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+      >
+        {messages.map((message) => (
+          <View
+            key={message.id}
+            style={[
+              styles.messageBubble,
+              message.isUser ? styles.userBubble : styles.botBubble,
+              {
+                backgroundColor: message.isUser ? userBubbleColor : botBubbleColor,
+                alignSelf: message.isUser ? 'flex-end' : 'flex-start',
+              },
+            ]}
+          >
+            <ThemedText
+              style={[
+                styles.messageText,
+                { color: message.isUser ? '#ffffff' : undefined },
+              ]}
+            >
+              {message.text}
             </ThemedText>
-          </>
-        }
-      />
-    </ThemedView>
+            <Text style={[styles.timestamp, { color: message.isUser ? 'rgba(255,255,255,0.7)' : '#9ca3af' }]}>
+              {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </Text>
+          </View>
+        ))}
+      </ScrollView>
+
+      {/* Input Area */}
+      <View style={[styles.inputContainer, { backgroundColor: bgColor, borderTopColor: borderColor }]}>
+        <View style={[styles.inputWrapper, { backgroundColor: inputBgColor, borderColor: borderColor }]}>
+          <TextInput
+            style={styles.input}
+            placeholder="Ask me about clubs..."
+            placeholderTextColor="#9ca3af"
+            value={inputText}
+            onChangeText={setInputText}
+            multiline
+            maxLength={500}
+            onSubmitEditing={handleSend}
+          />
+          <TouchableOpacity
+            style={[
+              styles.sendButton,
+              {
+                backgroundColor: inputText.trim() ? userBubbleColor : '#d1d5db',
+                opacity: inputText.trim() ? 1 : 0.5,
+              }
+            ]}
+            onPress={handleSend}
+            disabled={!inputText.trim()}
+          >
+            <IconSymbol name="arrow.up" size={20} color="#ffffff" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -259,80 +131,65 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  contentContainer: {
-    padding: 16,
-    paddingTop: 60, // Add padding for status bar / header
-  },
-  header: {
-    marginBottom: 16,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  searchInput: {
+  messagesContainer: {
     flex: 1,
-    marginLeft: 8,
-    fontSize: 16,
   },
-  controlsSection: {
-    marginBottom: 20,
-    zIndex: 10, // Ensure dropdown flows over other elements if absolute (but we are using stacking flow)
+  messagesContent: {
+    padding: 16,
+    paddingTop: 60,
+    paddingBottom: 8,
   },
-  dropdownButton: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  messageBubble: {
+    maxWidth: '80%',
     padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
+    borderRadius: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  dropdownButtonText: {
+  userBubble: {
+    borderBottomRightRadius: 4,
+  },
+  botBubble: {
+    borderBottomLeftRadius: 4,
+  },
+  messageText: {
     fontSize: 15,
-    fontWeight: '500',
+    lineHeight: 20,
+    marginBottom: 4,
   },
-  dropdownMenu: {
-    marginTop: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    overflow: 'hidden',
+  timestamp: {
+    fontSize: 11,
+    marginTop: 4,
   },
-  dropdownItem: {
-    paddingVertical: 12,
+  inputContainer: {
     paddingHorizontal: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#ccc',
+    paddingVertical: 12,
+    borderTopWidth: 1,
   },
-  dropdownItemSelected: {
-    backgroundColor: 'rgba(60, 130, 60, 0.1)', // Lighter green tint
-  },
-  subtitle: {
-    marginTop: 8,
-    fontSize: 16,
-    opacity: 0.7,
-  },
-  tagsSection: {
-    marginBottom: 24,
-  },
-  tagsScroll: {
-    gap: 8,
-    paddingRight: 16,
-  },
-  tag: {
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    borderWidth: 1,
+    borderRadius: 24,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 8,
   },
-  tagText: {
-    fontSize: 14,
-    textTransform: 'capitalize',
+  input: {
+    flex: 1,
+    fontSize: 15,
+    maxHeight: 100,
+    paddingVertical: 8,
   },
-  sectionTitle: {
-    marginBottom: 12,
+  sendButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
   },
 });
