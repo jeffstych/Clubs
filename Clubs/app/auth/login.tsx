@@ -1,58 +1,100 @@
 import "react-native-url-polyfill/auto";
 import Auth from "../../components/Auth";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "../../lib/supabase";
+import { ThemedView } from "@/components/themed-view";
+import { ThemedText } from "@/components/themed-text";
+import { useThemeColor } from "@/hooks/use-theme-color";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 
 export default function LoginScreen() {
   const { session } = useAuth();
+  const tintColor = useThemeColor({}, 'tint');
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
   };
 
-  // If there's a session, show sign out option (for debugging)
-  // The _layout.tsx should redirect away from this page when authenticated
   if (session) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.text}>You are logged in as:</Text>
-        <Text style={styles.text}>{session.user.email}</Text>
-        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
-      </View>
+      <ThemedView style={styles.container}>
+        <View style={styles.centerContent}>
+          <ThemedText type="subtitle">You are logged in as:</ThemedText>
+          <ThemedText style={styles.emailText}>{session.user.email}</ThemedText>
+          <TouchableOpacity
+            style={[styles.signOutButton, { backgroundColor: '#dc2626' }]}
+            onPress={handleSignOut}
+          >
+            <ThemedText style={styles.signOutText}>Sign Out</ThemedText>
+          </TouchableOpacity>
+        </View>
+      </ThemedView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <ThemedView style={styles.container}>
+      <View style={styles.header}>
+        <View style={[styles.logoContainer, { backgroundColor: tintColor + '20' }]}>
+          <IconSymbol name="leaf.fill" size={40} color={tintColor} />
+        </View>
+        <ThemedText type="title" style={styles.title}>Clubs</ThemedText>
+        <ThemedText style={styles.subtitle}>Discover your community at MSU</ThemedText>
+      </View>
       <Auth />
-    </View>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 50,
-    backgroundColor: "#000",
+    paddingTop: 120,
   },
-  text: {
-    marginTop: 20,
-    color: "#fff",
-    textAlign: "center",
+  header: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  logoContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 32,
+  },
+  title: {
+    fontSize: 40,
+    marginBottom: 12,
+    lineHeight: 48, // Added to prevent top clipping
+  },
+  subtitle: {
+    fontSize: 16,
+    opacity: 0.6,
+    textAlign: 'center',
+  },
+  centerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emailText: {
+    marginTop: 8,
+    fontSize: 18,
+    fontWeight: '600',
   },
   signOutButton: {
-    marginTop: 30,
-    backgroundColor: "#dc2626",
-    padding: 15,
-    marginHorizontal: 20,
-    borderRadius: 8,
+    marginTop: 40,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 30,
     alignItems: "center",
   },
   signOutText: {
     color: "#fff",
     fontWeight: "bold",
+    fontSize: 16,
   },
 });
