@@ -7,17 +7,40 @@ import { Club } from '@/data/clubs';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useEvents } from '@/context/EventContext';
-import { useFollow } from '@/context/FollowContext';
+import { useAuth } from '@/context/AuthContext';
+import { followClub, unfollowClub, isFollowingClub } from '@/lib/supabase';
+import { useState, useEffect } from 'react';
 
 interface ClubCardProps {
     club: Club;
+    onFollowChange?: () => void; // Callback when follow status changes
 }
 
-export function ClubCard({ club }: ClubCardProps) {
-    const { followClub, unfollowClub, isFollowing } = useFollow();
+export function ClubCard({ club, onFollowChange }: ClubCardProps) {
+    const { session } = useAuth();
     const { addEvent, removeEvent, isEventAdded } = useEvents();
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [followLoading, setFollowLoading] = useState(false);
+    
     const eventAdded = club.nextEvent ? isEventAdded(club.id) : false;
-    const following = isFollowing(club.id);
+
+    // Check if user is following this club on mount
+    useEffect(() => {
+        if (session?.user?.id) {
+            checkFollowStatus();
+        }
+    }, [session, club.id]);
+
+    const checkFollowStatus = async () => {
+        if (!session?.user?.id) return;
+        
+        try {
+            const { data: following } = await isFollowingClub(session.user.id, club.id);
+            setIsFollowing(following || false);
+        } catch (error) {
+            console.error('Error checking follow status:', error);
+        }
+    };
 
     const cardBackgroundColor = useThemeColor({ light: '#ffffff', dark: '#151718' }, 'background');
     // Translucent bubble effect for tags
@@ -29,13 +52,36 @@ export function ClubCard({ club }: ClubCardProps) {
     const followBtnBg = useThemeColor({ light: '#3c823c', dark: '#fff' }, 'tint');
     const followBtnText = useThemeColor({ light: '#fff', dark: '#062406' }, 'background');
 
-    const handleFollowPress = (e: any) => {
+    const handleFollowPress = async (e: any) => {
         e.stopPropagation();
         e.preventDefault();
-        if (following) {
-            unfollowClub(club.id);
-        } else {
-            followClub(club.id);
+        
+        if (!session?.user?.id) {
+            // Could navigate to login or show alert
+            console.log('User must be logged in to follow clubs');
+            return;
+        }
+        
+        setFollowLoading(true);
+        
+        try {
+            if (isFollowing) {
+                const { error } = await unfollowClub(session.user.id, club.id);
+                if (!error) {
+                    setIsFollowing(false);
+                    onFollowChange?.(); // Notify parent of change
+                }
+            } else {
+                const { error } = await followClub(session.user.id, club.id);
+                if (!error) {
+                    setIsFollowing(true);
+                    onFollowChange?.(); // Notify parent of change
+                }
+            }
+        } catch (error) {
+            console.error('Error updating follow status:', error);
+        } finally {
+            setFollowLoading(false);
         }
     };
 
@@ -76,17 +122,19 @@ export function ClubCard({ club }: ClubCardProps) {
                             <TouchableOpacity
                                 style={{
                                     ...styles.followButton,
-                                    backgroundColor: following ? 'transparent' : followBtnBg,
+                                    backgroundColor: isFollowing ? 'transparent' : followBtnBg,
                                     borderColor: followBtnBg,
                                     borderWidth: 1,
+                                    opacity: followLoading ? 0.7 : 1,
                                 }}
                                 onPress={handleFollowPress}
+                                disabled={followLoading}
                             >
                                 <ThemedText style={{
                                     ...styles.followButtonText,
-                                    color: following ? followBtnBg : followBtnText,
+                                    color: isFollowing ? followBtnBg : followBtnText,
                                 }}>
-                                    {following ? 'Following' : 'Follow'}
+                                    {followLoading ? 'Loading...' : isFollowing ? 'Following' : 'Follow'}
                                 </ThemedText>
                             </TouchableOpacity>
                         </View>

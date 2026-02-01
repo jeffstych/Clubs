@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { StyleSheet, ScrollView, TouchableOpacity, FlatList, View, TextInput, Pressable } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -7,6 +7,7 @@ import { useThemeColor } from '@/hooks/use-theme-color';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useAuth } from '@/context/AuthContext';
 import { getUserPreferenceTags, getRecommendedClubs, getAllTags, getClubs } from '@/lib/supabase';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function ExploreScreen() {
   const { session } = useAuth();
@@ -20,6 +21,7 @@ export default function ExploreScreen() {
   const [clubs, setClubs] = useState<any[]>([]);
   const [clubsLoading, setClubsLoading] = useState(true);
   const [categories, setCategories] = useState<string[]>([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const activeTagColor = useThemeColor({ light: '#fff', dark: '#062406' }, 'tint'); // Text on active tag
   const inactiveTagColor = useThemeColor({ light: '#687076', dark: '#9BA1A6' }, 'text');
@@ -40,6 +42,13 @@ export default function ExploreScreen() {
     }
     loadClubs();
   }, [session]);
+
+  // Refresh follow status when tab is focused
+  useFocusEffect(
+    useCallback(() => {
+      setRefreshTrigger(prev => prev + 1);
+    }, [])
+  );
 
   const loadClubs = async () => {
     try {
@@ -216,7 +225,7 @@ export default function ExploreScreen() {
         <FlatList
           data={sortedClubs}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <ClubCard club={item} />}
+          renderItem={({ item }) => <ClubCard club={item} key={`${item.id}-${refreshTrigger}`} />}
           contentContainerStyle={styles.contentContainer}
         ListHeaderComponent={
           <>
