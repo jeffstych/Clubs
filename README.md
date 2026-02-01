@@ -1,10 +1,10 @@
-# Clubs 📚
+# Clubbs 📚
 
-**Clubs** is a comprehensive mobile application designed to revolutionize how students discover, engage with, and participate in campus organizations and events. Built for university communities, Clubs bridges the gap between student organizations and potential members by providing an intuitive platform for club discovery, event management, and community building.
+**Clubbs** is a comprehensive mobile application designed to revolutionize how students discover, engage with, and participate in campus organizations and events. Built for university communities, Clubbs bridges the gap between student organizations and potential members by providing an intuitive platform for club discovery, event management, and community building.
 
 ## 🎯 Purpose
 
-Campus life is enriched by student organizations, but many students struggle to find clubs that align with their interests, and club organizers often face challenges in reaching their target audience. Clubs solves these problems by:
+Campus life is enriched by student organizations, but many students struggle to find clubs that align with their interests, and club organizers often face challenges in reaching their target audience. Clubbs solves these problems by:
 
 - **Streamlining Discovery**: Helping students find organizations that match their interests and goals
 - **Centralizing Information**: Providing a single platform for all club-related information and events
@@ -73,7 +73,7 @@ npx expo start
 ## 📱 App Structure
 
 - **Explore Tab**: Discover new clubs with personalized recommendations
-- **My Clubs Tab**: View and manage clubs you're following
+- **My Clubbs Tab**: View and manage clubs you're following
 - **Calendar Tab**: See all your upcoming events in one place
 - **Profile Tab**: Manage your preferences and account settings
 - **Club Detail Pages**: Comprehensive information about each club and their events
@@ -126,4 +126,4 @@ The app uses Supabase with the following main tables:
 
 ---
 
-Built with ❤️ for SpartaHack 11 by Team Clubs
+Built with ❤️ for SpartaHack 11 by Team Clubbs
