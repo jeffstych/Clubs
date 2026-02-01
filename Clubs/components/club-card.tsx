@@ -74,6 +74,7 @@ export function ClubCard({ club }: ClubCardProps) {
                     <View style={styles.content}>
                         <View style={styles.header}>
                             <ThemedText type="subtitle">{club.name}</ThemedText>
+<<<<<<< HEAD
                             <TouchableOpacity
                                 style={[styles.followButton, { backgroundColor: following ? 'transparent' : followBtnBg, borderColor: followBtnBg, borderWidth: 1 }]}
                                 onPress={handleFollowPress}
@@ -82,6 +83,26 @@ export function ClubCard({ club }: ClubCardProps) {
                                     {following ? 'Following' : 'Follow'}
                                 </ThemedText>
                             </TouchableOpacity>
+=======
+                            <View style={styles.buttonGroup}>
+                                <TouchableOpacity
+                                    style={[styles.followButton, { backgroundColor: isFollowing ? 'transparent' : followBtnBg, borderColor: followBtnBg, borderWidth: 1 }]}
+                                    onPress={handleFollowPress}
+                                >
+                                    <ThemedText style={[styles.followButtonText, { color: isFollowing ? followBtnBg : followBtnText }]}>
+                                        {isFollowing ? 'Following' : 'Follow'}
+                                    </ThemedText>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.viewMoreButton, { borderColor: followBtnBg, borderWidth: 1 }]}
+                                    onPress={() => { }}
+                                >
+                                    <ThemedText style={[styles.viewMoreButtonText, { color: followBtnBg }]}>
+                                        View More
+                                    </ThemedText>
+                                </TouchableOpacity>
+                            </View>
+>>>>>>> main
                         </View>
                         <ThemedText style={styles.category}>{club.category}</ThemedText>
                         <ThemedText numberOfLines={2} style={styles.description}>
@@ -144,12 +165,26 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
         marginBottom: 4,
     },
+    buttonGroup: {
+        flexDirection: 'row',
+    },
     followButton: {
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 20,
+        marginRight: 8,
     },
     followButtonText: {
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    viewMoreButton: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+        backgroundColor: 'transparent',
+    },
+    viewMoreButtonText: {
         fontSize: 12,
         fontWeight: '600',
     },
