@@ -132,6 +132,9 @@ export default function ProfilePage() {
               <ThemedText type="defaultSemiBold">{userPreferences.length}</ThemedText>
               <ThemedText style={[styles.statLabel, { color: secondaryTextColor }]}>Interests</ThemedText>
             </View>
+            <TouchableOpacity style={[styles.smallButton, { borderColor: tintColor }]}>
+              <ThemedText style={{ color: tintColor, fontSize: 12, fontWeight: '600' }}>Clubs</ThemedText>
+            </TouchableOpacity>
           </View>
 
           <TouchableOpacity style={[styles.editButton, { borderColor: tintColor }]}>
@@ -234,6 +237,7 @@ const styles = StyleSheet.create({
   },
   statsRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(128, 128, 128, 0.2)',
     paddingTop: 16,
@@ -253,6 +257,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     alignItems: 'center',
+  },
+  smallButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginLeft: 'auto',
   },
   menuSection: {
     gap: 0,
