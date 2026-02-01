@@ -11,6 +11,7 @@ import { getUserPreferenceTags, getRecommendedClubs, getAllTags, getClubs } from
 export default function ExploreScreen() {
   const { session } = useAuth();
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'category' | 'default'>('default');
   const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -18,6 +19,7 @@ export default function ExploreScreen() {
   const [loading, setLoading] = useState(true);
   const [clubs, setClubs] = useState<any[]>([]);
   const [clubsLoading, setClubsLoading] = useState(true);
+  const [categories, setCategories] = useState<string[]>([]);
 
   const activeTagColor = useThemeColor({ light: '#fff', dark: '#062406' }, 'tint'); // Text on active tag
   const inactiveTagColor = useThemeColor({ light: '#687076', dark: '#9BA1A6' }, 'text');
@@ -55,6 +57,14 @@ export default function ExploreScreen() {
           // Add any other fields that ClubCard expects
         }));
         setClubs(transformedClubs);
+        
+        // Extract unique categories
+        const uniqueCategories = [...new Set(
+          clubsData
+            .map((club: any) => club.club_category)
+            .filter((category: any) => category && typeof category === 'string')
+        )].sort();
+        setCategories(uniqueCategories);
       }
     } catch (error) {
       console.error('Error loading clubs:', error);
@@ -117,6 +127,13 @@ export default function ExploreScreen() {
       );
     }
 
+    // Filter by Selected Categories
+    if (selectedCategories.length > 0) {
+      filtered = filtered.filter(club =>
+        selectedCategories.includes(club.category)
+      );
+    }
+
     // Calculate relevance scores for each club
     const clubsWithScores = filtered.map((club) => {
       let userPreferenceScore = 0;
@@ -150,31 +167,42 @@ export default function ExploreScreen() {
 
     // Sort logic
     return clubsWithScores.sort((a, b) => {
-      // If tags are manually selected, prioritize selected tags score
-      if (selectedTags.length > 0) {
-        if (b.selectedTagsScore !== a.selectedTagsScore) {
-          return b.selectedTagsScore - a.selectedTagsScore;
-        }
-      } else {
-        // Default: prioritize user preference overlap
-        if (b.userPreferenceScore !== a.userPreferenceScore) {
-          return b.userPreferenceScore - a.userPreferenceScore;
-        }
-      }
-
-      // Apply secondary sort
+      // Apply primary sort based on sortBy selection
       if (sortBy === 'name') {
         return a.name.localeCompare(b.name);
       } else if (sortBy === 'category') {
-        return a.category.localeCompare(b.category);
+        const categorySort = a.category.localeCompare(b.category);
+        if (categorySort !== 0) return categorySort;
+        // If categories are the same, sort by name
+        return a.name.localeCompare(b.name);
+      } else {
+        // Default sorting: prioritize tag/preference overlap
+        // If tags are manually selected, prioritize selected tags score
+        if (selectedTags.length > 0) {
+          if (b.selectedTagsScore !== a.selectedTagsScore) {
+            return b.selectedTagsScore - a.selectedTagsScore;
+          }
+        } else {
+          // Default: prioritize user preference overlap
+          if (b.userPreferenceScore !== a.userPreferenceScore) {
+            return b.userPreferenceScore - a.userPreferenceScore;
+          }
+        }
+        // If scores are equal, sort by name
+        return a.name.localeCompare(b.name);
       }
-      return a.name.localeCompare(b.name);
     });
-  }, [selectedTags, searchQuery, sortBy, userPreferences, clubs]);
+  }, [selectedTags, selectedCategories, searchQuery, sortBy, userPreferences, clubs]);
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const toggleCategory = (category: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
     );
   };
 
@@ -264,7 +292,39 @@ export default function ExploreScreen() {
               )}
             </View>
 
+            {/* Categories Section */}
+            <View style={styles.categoriesSection}>
+              <ThemedText type="defaultSemiBold" style={styles.filterLabel}>Categories</ThemedText>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tagsScroll}>
+                {categories.map((category) => {
+                  const isActive = selectedCategories.includes(category);
+                  return (
+                    <TouchableOpacity
+                      key={category}
+                      style={[
+                        styles.categoryButton,
+                        { 
+                          backgroundColor: isActive ? activeBgColor : inactiveBgColor,
+                          borderColor: isActive ? activeBgColor : borderColor,
+                        },
+                      ]}
+                      onPress={() => toggleCategory(category)}>
+                      <ThemedText
+                        style={[
+                          styles.categoryText,
+                          { color: isActive ? activeTagColor : inactiveTagColor, fontWeight: isActive ? '600' : '400' },
+                        ]}>
+                        {category}
+                      </ThemedText>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+
+            {/* Tags Section */}
             <View style={styles.tagsSection}>
+              <ThemedText type="defaultSemiBold" style={styles.filterLabel}>Tags</ThemedText>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tagsScroll}>
                 {allTags.map((tag) => {
                   const isActive = selectedTags.includes(tag);
@@ -289,7 +349,7 @@ export default function ExploreScreen() {
               </ScrollView>
             </View>
             <ThemedText type="subtitle" style={styles.sectionTitle}>
-              {selectedTags.length > 0 
+              {(selectedTags.length > 0 || selectedCategories.length > 0)
                 ? "Filtered Clubs" 
                 : userPreferences.length > 0 
                   ? "Recommended for You" 
@@ -369,6 +429,25 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 16,
     opacity: 0.7,
+  },
+  categoriesSection: {
+    marginBottom: 20,
+  },
+  filterLabel: {
+    marginBottom: 12,
+    fontSize: 16,
+  },
+  categoryButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 25,
+    marginRight: 12,
+    borderWidth: 1,
+  },
+  categoryText: {
+    fontSize: 15,
+    fontWeight: '500',
+    textTransform: 'capitalize',
   },
   tagsSection: {
     marginBottom: 24,
