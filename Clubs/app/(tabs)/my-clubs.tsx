@@ -17,8 +17,8 @@ export default function MyClubsScreen() {
     const [showSortMenu, setShowSortMenu] = useState(false);
 
     const tintColor = useThemeColor({ light: '#3c823c', dark: '#fff' }, 'tint');
-    const menuBg = useThemeColor({ light: '#fff', dark: '#1c1c1e' }, 'background');
-    const borderColor = useThemeColor({ light: '#e5e5e5', dark: '#38383a' }, 'icon');
+    const menuBg = useThemeColor({ light: '#fff', dark: '#2c2c2e' }, 'background');
+    const borderColor = useThemeColor({ light: '#e5e5e5', dark: '#48484a' }, 'icon');
     const secondaryTextColor = useThemeColor({ light: '#666', dark: '#8E8E93' }, 'text');
 
     // Load clubs when the component mounts
