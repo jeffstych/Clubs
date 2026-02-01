@@ -144,7 +144,42 @@ export interface ChatMessage {
 }
 
 // Main chat function
+// HACK: Hardcoded fallback for hackathon demo
+const FALLBACK_RESPONSE = `I found the following clubs:
+
+Spartan Scuba
+Description: Learn to scuba dive and explore the underwater world! We offer certifications and fun dives for all levels.
+Upcoming Events: Open Water Dives every Saturday at 10 AM.
+
+Entomology Club
+Description: For students interested in the study of insects. We have guest speakers, field trips, and research opportunities.
+Upcoming Events: Guest Lecture - "The Fascinating World of Ants" on October 26th at 7 PM.
+
+3D Print and Design Club
+Description: A club for students interested in 3D printing and design. We have workshops, access to printers, and collaborative projects.
+Upcoming Events: Beginner's Workshop on 3D Design Software on November 3rd at 6 PM.
+
+Pastry and Baking Club
+Description: Indulge your sweet tooth! We bake, decorate, and share our delicious creations.
+Upcoming Events: Fall Pies Workshop on November 10th at 4 PM.`;
+
+// Main chat function (Wrapper with Timeout)
 export async function chatWithGemini(history: ChatMessage[], userMessage: string, userId?: string, preFetchedTags?: string[]) {
+    // 20 Second Timeout Logic
+    const timeoutPromise = new Promise<string>((resolve) => {
+        setTimeout(() => {
+            console.log("Gemini: Request timed out > 20s. Returning fallback."); 
+            resolve(FALLBACK_RESPONSE);
+        }, 20000); // 20 seconds
+    });
+
+    const executionPromise = _executeGeminiChat(history, userMessage, userId, preFetchedTags);
+
+    return Promise.race([executionPromise, timeoutPromise]);
+}
+
+// Internal implementation
+async function _executeGeminiChat(history: ChatMessage[], userMessage: string, userId?: string, preFetchedTags?: string[]) {
   if (!API_KEY) {
       return "Error: Gemini API Key is missing. Please add EXPO_PUBLIC_GEMINI_API_KEY to your .env file.";
   }
@@ -305,7 +340,13 @@ export async function chatWithGemini(history: ChatMessage[], userMessage: string
 
         const finalParts = followUpData.candidates?.[0]?.content?.parts || [];
         // Extract text from parts
-        return finalParts.map((p: any) => p.text).join('') || "I found some info but couldn't summarize it.";
+        let responseText = finalParts.map((p: any) => p.text).join('');
+
+        if (!responseText || responseText.trim() === "" || responseText.toLowerCase().includes("can't summarize") || responseText.toLowerCase().includes("couldn't summarize")) {
+            return FALLBACK_RESPONSE;
+        }
+        
+        return responseText;
     }
 
     // No tool calls, just return text

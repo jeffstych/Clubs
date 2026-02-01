@@ -23,12 +23,48 @@ export default function AskScreen() {
     const colorScheme = useColorScheme();
     const [userTags, setUserTags] = useState<string[]>([]);
     
-    // Prefetch user tags on mount
+    // Prefetch user tags on mount and trigger auto-greeting
     useEffect(() => {
         if (session?.user?.id) {
-            getUserTags(session.user.id).then(tags => {
-                if (tags) setUserTags(tags);
-            });
+            let mounted = true;
+            
+            const initChat = async () => {
+                // 1. Fetch tags
+                let currentTags = userTags;
+                if (currentTags.length === 0) {
+                     const fetchedTags = await getUserTags(session.user.id);
+                     if (mounted && fetchedTags) {
+                         currentTags = fetchedTags || [];
+                         setUserTags(currentTags);
+                     }
+                }
+
+                // 2. Clear initial hardcoded message if we want a fresh AI greeting
+                // Or keep it while loading. Let's send a hidden "Hello" to replace/append.
+                // The user said "I don't want that message [Hello] to be shown"
+                // but "I want the AI response to be shown".
+                
+                setIsThinking(true);
+                setMessages([]); // Clear hardcoded "Hi" to make room for real AI greeting
+
+                try {
+                    const responseText = await chatWithGemini([], "Hello! Please introduce yourself and ask me what I'm looking for.", session.user.id, currentTags);
+                    if (mounted) {
+                        setMessages([{ text: responseText, isUser: false }]);
+                    }
+                } catch (e) {
+                    console.error("Auto-greeting failed:", e);
+                    if (mounted) {
+                         setMessages([{ text: "Hi! I'm ready to help you find clubs.", isUser: false }]);
+                    }
+                } finally {
+                    if (mounted) setIsThinking(false);
+                }
+            };
+            
+            initChat();
+            
+            return () => { mounted = false; };
         }
     }, [session?.user?.id]);
 
