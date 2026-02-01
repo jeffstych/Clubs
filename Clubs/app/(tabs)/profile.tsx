@@ -103,10 +103,9 @@ export default function ProfilePage() {
 
         <View style={[styles.headerCard, { backgroundColor: itemBg, borderColor }]}>
           <View style={styles.profileInfo}>
-            <Image
-              source={user.avatar_url}
-              style={styles.avatar}
-            />
+            <View style={[styles.avatarContainer, { backgroundColor: tintColor + '20' }]}>
+              <IconSymbol name="leaf.fill" size={32} color={tintColor} />
+            </View>
             <View style={styles.userMeta}>
               <ThemedText type="subtitle">{user.name}</ThemedText>
               <ThemedText style={{ color: secondaryTextColor }}>{user.email}</ThemedText>
@@ -209,11 +208,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  avatar: {
+  avatarContainer: {
     width: 70,
     height: 70,
     borderRadius: 35,
     marginRight: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   userMeta: {
     flex: 1,
