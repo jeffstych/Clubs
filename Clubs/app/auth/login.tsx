@@ -37,7 +37,7 @@ export default function LoginScreen() {
     <ThemedView style={styles.container}>
       <View style={styles.header}>
         <View style={[styles.logoContainer, { backgroundColor: tintColor + '20' }]}>
-          <IconSymbol name="shield.fill" size={40} color={tintColor} />
+          <IconSymbol name="squirrel.fill" size={40} color={tintColor} />
         </View>
         <ThemedText type="title" style={styles.title}>Clubs</ThemedText>
         <ThemedText style={styles.subtitle}>Discover your community at MSU</ThemedText>
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 40,
   },
   logoContainer: {
     width: 80,
@@ -62,11 +62,11 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 24,
   },
   title: {
     fontSize: 40,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   subtitle: {
     fontSize: 16,
