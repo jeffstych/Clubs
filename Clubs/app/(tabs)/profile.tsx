@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -13,9 +13,45 @@ import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { supabase } from '@/lib/supabase';
+import { supabase, getUserPreferenceTags, getFollowedClubs } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
 
 export default function ProfilePage() {
+  const { session } = useAuth();
+  const [userPreferences, setUserPreferences] = useState<string[]>([]);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      loadUserData();
+    }
+  }, [session]);
+
+  const loadUserData = async () => {
+    if (!session?.user?.id) return;
+
+    try {
+      setLoading(true);
+      
+      // Get user preferences
+      const { data: prefsData } = await getUserPreferenceTags(session.user.id);
+      if (prefsData) {
+        setUserPreferences(prefsData.preferenceTags);
+      }
+
+      // Get following count
+      const { data: followedClubs } = await getFollowedClubs(session.user.id);
+      if (followedClubs) {
+        setFollowingCount(followedClubs.length);
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLogout = async () => {
     const performLogout = async () => {
       const { error } = await supabase.auth.signOut();
@@ -40,14 +76,14 @@ export default function ProfilePage() {
     }
   };
 
-  // TODO: Replace with actual user data from Supabase
+  // Use real user data from session
   const user = {
-    id: '1',
-    name: 'John Doe',
-    email: 'john.doe@msu.edu',
-    avatar_url: 'https://via.placeholder.com/150',
-    bio: 'Computer Science student at MSU. Interested in AI and web development.',
-    followingCount: 12,
+    id: session?.user?.id || '',
+    name: session?.user?.user_metadata?.name || session?.user?.email?.split('@')[0] || 'User',
+    email: session?.user?.email || '',
+    avatar_url: session?.user?.user_metadata?.avatar_url || 'https://via.placeholder.com/150',
+    bio: userPreferences.length > 0 ? `Interested in: ${userPreferences.slice(0, 3).join(', ')}${userPreferences.length > 3 ? '...' : ''}` : 'No interests selected yet',
+    followingCount,
   };
 
   const itemBg = useThemeColor({ light: '#ffffff', dark: '#151718' }, 'background');
@@ -84,6 +120,10 @@ export default function ProfilePage() {
             <View style={styles.statItem}>
               <ThemedText type="defaultSemiBold">{user.followingCount}</ThemedText>
               <ThemedText style={[styles.statLabel, { color: secondaryTextColor }]}>Following</ThemedText>
+            </View>
+            <View style={styles.statItem}>
+              <ThemedText type="defaultSemiBold">{userPreferences.length}</ThemedText>
+              <ThemedText style={[styles.statLabel, { color: secondaryTextColor }]}>Interests</ThemedText>
             </View>
           </View>
 
@@ -124,7 +164,7 @@ export default function ProfilePage() {
           })}
 
           <TouchableOpacity
-            onPress={() => router.push('/auth/quiz?edit=true')}
+            onPress={() => router.push('/edit-preferences')}
             style={{
               ...styles.menuItem,
               backgroundColor: itemBg,
