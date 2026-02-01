@@ -56,8 +56,6 @@ export default function ProfilePage() {
   const secondaryTextColor = useThemeColor({ light: '#687076', dark: '#9BA1A6' }, 'text');
 
   const menuItems = [
-    { icon: 'list.bullet', label: 'My Clubs', href: '/(tabs)/my-clubs' },
-    { icon: 'calendar', label: 'My Events', href: '/(tabs)/calendar' },
     { icon: 'gearshape.fill', label: 'Settings', href: '/settings' },
   ];
 
