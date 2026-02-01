@@ -74,23 +74,13 @@ export function ClubCard({ club }: ClubCardProps) {
                     <View style={styles.content}>
                         <View style={styles.header}>
                             <ThemedText type="subtitle">{club.name}</ThemedText>
-<<<<<<< HEAD
-                            <TouchableOpacity
-                                style={[styles.followButton, { backgroundColor: following ? 'transparent' : followBtnBg, borderColor: followBtnBg, borderWidth: 1 }]}
-                                onPress={handleFollowPress}
-                            >
-                                <ThemedText style={[styles.followButtonText, { color: following ? followBtnBg : followBtnText }]}>
-                                    {following ? 'Following' : 'Follow'}
-                                </ThemedText>
-                            </TouchableOpacity>
-=======
                             <View style={styles.buttonGroup}>
                                 <TouchableOpacity
-                                    style={[styles.followButton, { backgroundColor: isFollowing ? 'transparent' : followBtnBg, borderColor: followBtnBg, borderWidth: 1 }]}
+                                    style={[styles.followButton, { backgroundColor: following ? 'transparent' : followBtnBg, borderColor: followBtnBg, borderWidth: 1 }]}
                                     onPress={handleFollowPress}
                                 >
-                                    <ThemedText style={[styles.followButtonText, { color: isFollowing ? followBtnBg : followBtnText }]}>
-                                        {isFollowing ? 'Following' : 'Follow'}
+                                    <ThemedText style={[styles.followButtonText, { color: following ? followBtnBg : followBtnText }]}>
+                                        {following ? 'Following' : 'Follow'}
                                     </ThemedText>
                                 </TouchableOpacity>
                                 <TouchableOpacity
@@ -102,7 +92,6 @@ export function ClubCard({ club }: ClubCardProps) {
                                     </ThemedText>
                                 </TouchableOpacity>
                             </View>
->>>>>>> main
                         </View>
                         <ThemedText style={styles.category}>{club.category}</ThemedText>
                         <ThemedText numberOfLines={2} style={styles.description}>
