@@ -22,28 +22,28 @@ export default function AskScreen() {
     const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
     const [userTags, setUserTags] = useState<string[]>([]);
-    
+
     // Prefetch user tags on mount and trigger auto-greeting
     useEffect(() => {
         if (session?.user?.id) {
             let mounted = true;
-            
+
             const initChat = async () => {
                 // 1. Fetch tags
                 let currentTags = userTags;
                 if (currentTags.length === 0) {
-                     const fetchedTags = await getUserTags(session.user.id);
-                     if (mounted && fetchedTags) {
-                         currentTags = fetchedTags || [];
-                         setUserTags(currentTags);
-                     }
+                    const fetchedTags = await getUserTags(session.user.id);
+                    if (mounted && fetchedTags) {
+                        currentTags = fetchedTags || [];
+                        setUserTags(currentTags);
+                    }
                 }
 
                 // 2. Clear initial hardcoded message if we want a fresh AI greeting
                 // Or keep it while loading. Let's send a hidden "Hello" to replace/append.
                 // The user said "I don't want that message [Hello] to be shown"
                 // but "I want the AI response to be shown".
-                
+
                 setIsThinking(true);
                 setMessages([]); // Clear hardcoded "Hi" to make room for real AI greeting
 
@@ -55,15 +55,15 @@ export default function AskScreen() {
                 } catch (e) {
                     console.error("Auto-greeting failed:", e);
                     if (mounted) {
-                         setMessages([{ text: "Hi! I'm ready to help you find clubs.", isUser: false }]);
+                        setMessages([{ text: "Hi! I'm ready to help you find clubs.", isUser: false }]);
                     }
                 } finally {
                     if (mounted) setIsThinking(false);
                 }
             };
-            
+
             initChat();
-            
+
             return () => { mounted = false; };
         }
     }, [session?.user?.id]);
@@ -84,7 +84,7 @@ export default function AskScreen() {
 
         const userText = input.trim();
         setInput('');
-        
+
         const userMessage = { text: userText, isUser: true };
         setMessages(prev => [...prev, userMessage]);
         setIsThinking(true);
@@ -98,22 +98,22 @@ export default function AskScreen() {
             const userId = session?.user?.id;
             console.log("AskScreen: handleSend called. UserId:", userId); // DEBUG LOG
             console.log("AskScreen: Current userTags state:", userTags); // DEBUG LOG
-            
+
             // Critical optimization: Ensure we have tags BEFORE calling Gemini
             // This prevents the AI from falling back to a slow 2-step process
             let currentTags = userTags;
             if (userId && currentTags.length === 0) {
-                 console.log("AskScreen: Tags missing, fetching now..."); // DEBUG LOG
-                 const fetchedTags = await getUserTags(userId);
-                 console.log("AskScreen: Fetched tags:", fetchedTags); // DEBUG LOG
-                 if (fetchedTags && fetchedTags.length > 0) {
-                     currentTags = fetchedTags;
-                     setUserTags(fetchedTags); // Update state for next time
-                 }
+                console.log("AskScreen: Tags missing, fetching now..."); // DEBUG LOG
+                const fetchedTags = await getUserTags(userId);
+                console.log("AskScreen: Fetched tags:", fetchedTags); // DEBUG LOG
+                if (fetchedTags && fetchedTags.length > 0) {
+                    currentTags = fetchedTags;
+                    setUserTags(fetchedTags); // Update state for next time
+                }
             } else {
-                 console.log("AskScreen: Using existing tags:", currentTags); // DEBUG LOG
+                console.log("AskScreen: Using existing tags:", currentTags); // DEBUG LOG
             }
-            
+
             const responseText = await chatWithGemini(messages, userText, userId, currentTags);
             const botMessage = { text: responseText, isUser: false };
             setMessages(prev => [...prev, botMessage]);
@@ -136,77 +136,81 @@ export default function AskScreen() {
                 style={styles.keyboardView}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
             >
-                <ScrollView
-                    ref={scrollViewRef}
-
-                    contentContainerStyle={styles.messagesContainer}
-                    keyboardShouldPersistTaps="handled"
-                    onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
                 >
-                    <ThemedText type="title" style={styles.title}>Ask</ThemedText>
-                    {messages.map((message, index) => (
-                        <View
-                            key={index}
+                {/* Background decoration */}
+                <View style={styles.backgroundDecoration} pointerEvents="none">
+                    <IconSymbol
+                        name="leaf.fill"
+                        size={300}
+                        color={tintColor}
+                        style={{ opacity: 0.05 }}
+                    />
+                </View>
+
+                <ThemedText type="title" style={styles.title}>Ask</ThemedText>
+                {messages.map((message, index) => (
+                    <View
+                        key={index}
+                        style={[
+                            styles.messageBubble,
+                            message.isUser ? styles.userMessage : styles.botMessage,
+                            {
+                                backgroundColor: message.isUser ? userBubbleColor : botBubbleColor,
+                                alignSelf: message.isUser ? 'flex-end' : 'flex-start',
+                            },
+                        ]}
+                    >
+                        <ThemedText
                             style={[
-                                styles.messageBubble,
-                                message.isUser ? styles.userMessage : styles.botMessage,
-                                {
-                                    backgroundColor: message.isUser ? userBubbleColor : botBubbleColor,
-                                    alignSelf: message.isUser ? 'flex-end' : 'flex-start',
-                                },
+                                styles.messageText,
+                                { color: message.isUser ? '#ffffff' : textColor },
                             ]}
                         >
-                            <ThemedText
-                                style={[
-                                    styles.messageText,
-                                    { color: message.isUser ? '#ffffff' : textColor },
-                                ]}
-                            >
-                                {message.text}
-                            </ThemedText>
-                        </View>
-                    ))}
-                    
-                    {isThinking && (
-                        <View style={[styles.messageBubble, styles.botMessage, { backgroundColor: botMsgBg }]}>
-                             <ActivityIndicator size="small" color={textColor} />
-                        </View>
-                    )}
-                </ScrollView>
-
-                <View style={[
-                    styles.inputWrapper,
-                    {
-                        backgroundColor: cardBg,
-                        paddingBottom: Math.max(insets.bottom, 20) + 70 
-                    }
-                ]}>
-                    <View style={[styles.inputContainer, { backgroundColor: inputBg }]}>
-                        <TextInput
-                            style={[styles.input, { color: textColor }]}
-                            value={input}
-                            onChangeText={setInput}
-                            placeholder="Ask about clubs..."
-                            placeholderTextColor={textColor + '80'}
-                            onSubmitEditing={handleSend}
-                            returnKeyType="send"
-                            editable={!isThinking}
-                        />
-                        <TouchableOpacity 
-                            onPress={handleSend} 
-                            disabled={!input.trim() || isThinking}
-                            style={styles.sendButton}
-                        >
-                            <IconSymbol 
-                                name="paperplane.fill" 
-                                size={20} 
-                                color={input.trim() && !isThinking ? greenText : iconColor} 
-                            />
-                        </TouchableOpacity>
+                            {message.text}
+                        </ThemedText>
                     </View>
+                ))}
+
+                {isThinking && (
+                    <View style={[styles.messageBubble, styles.botMessage, { backgroundColor: botMsgBg }]}>
+                        <ActivityIndicator size="small" color={textColor} />
+                    </View>
+                )}
+            </ScrollView>
+
+            <View style={[
+                styles.inputWrapper,
+                {
+                    backgroundColor: cardBg,
+                    paddingBottom: Math.max(insets.bottom, 20) + 70
+                }
+            ]}>
+                <View style={[styles.inputContainer, { backgroundColor: inputBg }]}>
+                    <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        value={input}
+                        onChangeText={setInput}
+                        placeholder="Ask about clubs..."
+                        placeholderTextColor={textColor + '80'}
+                        onSubmitEditing={handleSend}
+                        returnKeyType="send"
+                        editable={!isThinking}
+                    />
+                    <TouchableOpacity
+                        onPress={handleSend}
+                        disabled={!input.trim() || isThinking}
+                        style={styles.sendButton}
+                    >
+                        <IconSymbol
+                            name="paperplane.fill"
+                            size={20}
+                            color={input.trim() && !isThinking ? greenText : iconColor}
+                        />
+                    </TouchableOpacity>
                 </View>
-            </KeyboardAvoidingView>
-        </ThemedView>
+            </View>
+        </KeyboardAvoidingView>
+        </ThemedView >
     );
 }
 
@@ -275,5 +279,15 @@ const styles = StyleSheet.create({
     sendButton: {
         padding: 10,
         borderRadius: 20,
+    },
+    backgroundDecoration: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: -1,
     },
 });
