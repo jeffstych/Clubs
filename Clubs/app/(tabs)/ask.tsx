@@ -131,86 +131,92 @@ export default function AskScreen() {
 
     return (
         <ThemedView style={styles.container}>
+            {/* Background Decoration */}
+            <View style={styles.backgroundIconContainer} pointerEvents="none">
+                <IconSymbol
+                    name="leaf.fill"
+                    size={320}
+                    color={tintColor}
+                    style={{ opacity: 0.05, transform: [{ rotate: '-15deg' }] }}
+                />
+            </View>
+
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.keyboardView}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
             >
-                >
-                {/* Background decoration */}
-                <View style={styles.backgroundDecoration} pointerEvents="none">
-                    <IconSymbol
-                        name="leaf.fill"
-                        size={300}
-                        color={tintColor}
-                        style={{ opacity: 0.05 }}
-                    />
-                </View>
+                <ScrollView
+                    ref={scrollViewRef}
 
-                <ThemedText type="title" style={styles.title}>Ask</ThemedText>
-                {messages.map((message, index) => (
-                    <View
-                        key={index}
-                        style={[
-                            styles.messageBubble,
-                            message.isUser ? styles.userMessage : styles.botMessage,
-                            {
-                                backgroundColor: message.isUser ? userBubbleColor : botBubbleColor,
-                                alignSelf: message.isUser ? 'flex-end' : 'flex-start',
-                            },
-                        ]}
-                    >
-                        <ThemedText
+                    contentContainerStyle={styles.messagesContainer}
+                    keyboardShouldPersistTaps="handled"
+                    onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+                >
+                    <ThemedText type="title" style={styles.title}>Ask</ThemedText>
+                    {messages.map((message, index) => (
+                        <View
+                            key={index}
                             style={[
-                                styles.messageText,
-                                { color: message.isUser ? '#ffffff' : textColor },
+                                styles.messageBubble,
+                                message.isUser ? styles.userMessage : styles.botMessage,
+                                {
+                                    backgroundColor: message.isUser ? userBubbleColor : botBubbleColor,
+                                    alignSelf: message.isUser ? 'flex-end' : 'flex-start',
+                                },
                             ]}
                         >
-                            {message.text}
-                        </ThemedText>
-                    </View>
-                ))}
+                            <ThemedText
+                                style={[
+                                    styles.messageText,
+                                    { color: message.isUser ? '#ffffff' : textColor },
+                                ]}
+                            >
+                                {message.text}
+                            </ThemedText>
+                        </View>
+                    ))}
 
-                {isThinking && (
-                    <View style={[styles.messageBubble, styles.botMessage, { backgroundColor: botMsgBg }]}>
-                        <ActivityIndicator size="small" color={textColor} />
-                    </View>
-                )}
-            </ScrollView>
+                    {isThinking && (
+                        <View style={[styles.messageBubble, styles.botMessage, { backgroundColor: botMsgBg }]}>
+                            <ActivityIndicator size="small" color={textColor} />
+                        </View>
+                    )}
+                </ScrollView>
 
-            <View style={[
-                styles.inputWrapper,
-                {
-                    backgroundColor: cardBg,
-                    paddingBottom: Math.max(insets.bottom, 20) + 70
-                }
-            ]}>
-                <View style={[styles.inputContainer, { backgroundColor: inputBg }]}>
-                    <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={input}
-                        onChangeText={setInput}
-                        placeholder="Ask about clubs..."
-                        placeholderTextColor={textColor + '80'}
-                        onSubmitEditing={handleSend}
-                        returnKeyType="send"
-                        editable={!isThinking}
-                    />
-                    <TouchableOpacity
-                        onPress={handleSend}
-                        disabled={!input.trim() || isThinking}
-                        style={styles.sendButton}
-                    >
-                        <IconSymbol
-                            name="paperplane.fill"
-                            size={20}
-                            color={input.trim() && !isThinking ? greenText : iconColor}
+                <View style={[
+                    styles.inputWrapper,
+                    {
+                        backgroundColor: cardBg,
+                        paddingBottom: Math.max(insets.bottom, 20) + 70
+                    }
+                ]}>
+                    <View style={[styles.inputContainer, { backgroundColor: inputBg }]}>
+                        <TextInput
+                            style={[styles.input, { color: textColor }]}
+                            value={input}
+                            onChangeText={setInput}
+                            placeholder="Ask about clubs..."
+                            placeholderTextColor={textColor + '80'}
+                            onSubmitEditing={handleSend}
+                            returnKeyType="send"
+                            editable={!isThinking}
                         />
-                    </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={handleSend}
+                            disabled={!input.trim() || isThinking}
+                            style={styles.sendButton}
+                        >
+                            <IconSymbol
+                                name="paperplane.fill"
+                                size={20}
+                                color={input.trim() && !isThinking ? greenText : iconColor}
+                            />
+                        </TouchableOpacity>
+                    </View>
                 </View>
-            </View>
-        </KeyboardAvoidingView>
-        </ThemedView >
+            </KeyboardAvoidingView>
+        </ThemedView>
     );
 }
 
@@ -280,7 +286,7 @@ const styles = StyleSheet.create({
         padding: 10,
         borderRadius: 20,
     },
-    backgroundDecoration: {
+    backgroundIconContainer: {
         position: 'absolute',
         top: 0,
         left: 0,
@@ -288,6 +294,6 @@ const styles = StyleSheet.create({
         bottom: 0,
         justifyContent: 'center',
         alignItems: 'center',
-        zIndex: -1,
+        zIndex: 0,
     },
 });
