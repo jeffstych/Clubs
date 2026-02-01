@@ -37,7 +37,7 @@ export default function LoginScreen() {
     <ThemedView style={styles.container}>
       <View style={styles.header}>
         <View style={[styles.logoContainer, { backgroundColor: tintColor + '20' }]}>
-          <IconSymbol name="leaf.fill" size={40} color={tintColor} />
+          <IconSymbol name="shield.fill" size={40} color={tintColor} />
         </View>
         <ThemedText type="title" style={styles.title}>Clubs</ThemedText>
         <ThemedText style={styles.subtitle}>Discover your community at MSU</ThemedText>
@@ -50,7 +50,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 80,
+    paddingTop: 120,
   },
   header: {
     alignItems: 'center',
