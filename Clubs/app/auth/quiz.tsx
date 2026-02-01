@@ -5,7 +5,6 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/context/AuthContext';
 import { CLUBS } from '@/data/clubs';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 
@@ -23,7 +22,24 @@ type QuizOption = {
 };
 
 export default function QuizScreen() {
-  const { session, refreshProfile } = useAuth();
+  const [session, setSession] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const refreshProfile = async () => {
+    // Local implementation of profile refresh
+    console.log('Refreshing profile...');
+  };
   const { edit } = useLocalSearchParams<{ edit?: string }>();
   const isEditMode = edit === 'true';
 
@@ -62,11 +78,13 @@ export default function QuizScreen() {
 
   useEffect(() => {
     if (isEditMode) {
-      fetchUserPreferences();
+      if (session?.user?.id) {
+        fetchUserPreferences();
+      }
     } else {
       fetchQuestions();
     }
-  }, [isEditMode]);
+  }, [isEditMode, session]);
 
   const fetchUserPreferences = async () => {
     try {
