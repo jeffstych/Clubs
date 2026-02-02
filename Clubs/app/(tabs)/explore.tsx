@@ -22,6 +22,7 @@ export default function ExploreScreen() {
   const [clubsLoading, setClubsLoading] = useState(true);
   const [categories, setCategories] = useState<string[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [hiddenClubIds, setHiddenClubIds] = useState<string[]>([]);
 
   const activeTagColor = useThemeColor({ light: '#fff', dark: '#062406' }, 'tint'); // Text on active tag
   const inactiveTagColor = useThemeColor({ light: '#3c823c', dark: '#9BA1A6' }, 'text');
@@ -130,6 +131,11 @@ export default function ExploreScreen() {
   const sortedClubs = useMemo(() => {
     let filtered = clubs;
 
+    // Filter out hidden clubs
+    if (hiddenClubIds.length > 0) {
+      filtered = filtered.filter(club => !hiddenClubIds.includes(club.id));
+    }
+
     // Filter by Search Query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -218,6 +224,10 @@ export default function ExploreScreen() {
     );
   };
 
+  const handleNotInterested = (clubId: string) => {
+    setHiddenClubIds(prev => [...prev, clubId]);
+  };
+
   return (
     <ThemedView style={styles.container}>
       {clubsLoading ? (
@@ -228,7 +238,13 @@ export default function ExploreScreen() {
         <FlatList
           data={sortedClubs}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <ClubCard club={item} key={`${item.id}-${refreshTrigger}`} />}
+          renderItem={({ item }) => (
+            <ClubCard
+              club={item}
+              key={`${item.id}-${refreshTrigger}`}
+              onNotInterested={handleNotInterested}
+            />
+          )}
           contentContainerStyle={styles.contentContainer}
           ListHeaderComponent={
             <>
