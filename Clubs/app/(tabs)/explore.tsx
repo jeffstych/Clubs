@@ -8,6 +8,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useAuth } from '@/context/AuthContext';
 import { getUserPreferenceTags, getRecommendedClubs, getAllTags, getClubs } from '@/lib/supabase';
 import { useFocusEffect } from '@react-navigation/native';
+import { useHiddenClubs } from '@/context/HiddenClubsContext';
 
 export default function ExploreScreen() {
   const { session } = useAuth();
@@ -22,7 +23,7 @@ export default function ExploreScreen() {
   const [clubsLoading, setClubsLoading] = useState(true);
   const [categories, setCategories] = useState<string[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [hiddenClubIds, setHiddenClubIds] = useState<string[]>([]);
+  const { hiddenClubIds, hideClub } = useHiddenClubs();
 
   const activeTagColor = useThemeColor({ light: '#fff', dark: '#062406' }, 'tint'); // Text on active tag
   const inactiveTagColor = useThemeColor({ light: '#3c823c', dark: '#9BA1A6' }, 'text');
@@ -210,11 +211,11 @@ export default function ExploreScreen() {
         return a.name.localeCompare(b.name);
       }
     });
-  }, [selectedTags, selectedCategories, searchQuery, sortBy, userPreferences, clubs]);
+  }, [selectedTags, selectedCategories, searchQuery, sortBy, userPreferences, clubs, hiddenClubIds]);
 
   const handleNotInterested = useCallback((clubId: string) => {
-    setHiddenClubIds(prev => [...prev, clubId]);
-  }, []);
+    hideClub(clubId);
+  }, [hideClub]);
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
