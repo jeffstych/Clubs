@@ -212,6 +212,10 @@ export default function ExploreScreen() {
     });
   }, [selectedTags, selectedCategories, searchQuery, sortBy, userPreferences, clubs]);
 
+  const handleNotInterested = useCallback((clubId: string) => {
+    setHiddenClubIds(prev => [...prev, clubId]);
+  }, []);
+
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
@@ -222,10 +226,6 @@ export default function ExploreScreen() {
     setSelectedCategories((prev) =>
       prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
     );
-  };
-
-  const handleNotInterested = (clubId: string) => {
-    setHiddenClubIds(prev => [...prev, clubId]);
   };
 
   return (
