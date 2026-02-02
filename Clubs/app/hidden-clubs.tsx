@@ -58,7 +58,7 @@ export default function HiddenClubsScreen() {
             <Stack.Screen options={{
                 title: 'Hidden Clubs',
                 headerTintColor: tintColor,
-                headerBackTitle: ''
+                headerBackTitle: 'Back'
             }} />
 
             {hiddenClubs.length === 0 ? (
