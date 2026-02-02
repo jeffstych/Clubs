@@ -94,6 +94,7 @@ export default function ProfilePage() {
   const menuItems = [
     { icon: 'gearshape.fill', label: 'Settings', href: '/settings' },
     { icon: 'sparkles', label: 'Edit Preferences', href: '/edit-preferences' },
+    { icon: 'eye.slash.fill', label: 'Hidden Clubs', href: '/hidden-clubs' },
   ];
 
   return (
