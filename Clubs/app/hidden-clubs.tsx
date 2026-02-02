@@ -8,6 +8,8 @@ import { useThemeColor } from '@/hooks/use-theme-color';
 import { useHiddenClubs } from '@/context/HiddenClubsContext';
 import { getClubs } from '@/lib/supabase';
 import { Image } from 'expo-image';
+import { Pressable } from 'react-native';
+import { router } from 'expo-router';
 
 export default function HiddenClubsScreen() {
     const { hiddenClubIds, unhideClub } = useHiddenClubs();
@@ -53,7 +55,11 @@ export default function HiddenClubsScreen() {
 
     return (
         <ThemedView style={styles.container}>
-            <Stack.Screen options={{ title: 'Hidden Clubs', headerTintColor: tintColor }} />
+            <Stack.Screen options={{
+                title: 'Hidden Clubs',
+                headerTintColor: tintColor,
+                headerBackTitle: ''
+            }} />
 
             {hiddenClubs.length === 0 ? (
                 <View style={styles.emptyContainer}>
@@ -68,19 +74,24 @@ export default function HiddenClubsScreen() {
                     keyExtractor={(item) => item.id}
                     contentContainerStyle={styles.listContent}
                     renderItem={({ item }) => (
-                        <View style={[styles.clubItem, { backgroundColor: itemBg, borderColor }]}>
-                            <Image source={{ uri: item.image }} style={styles.clubImage} contentFit="cover" />
-                            <View style={styles.clubInfo}>
-                                <ThemedText type="defaultSemiBold">{item.name}</ThemedText>
-                                <ThemedText style={{ color: secondaryTextColor, fontSize: 12 }}>{item.category}</ThemedText>
+                        <Pressable
+                            onPress={() => router.push(`/clubs/${item.id}` as any)}
+                            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                        >
+                            <View style={[styles.clubItem, { backgroundColor: itemBg, borderColor }]}>
+                                <Image source={{ uri: item.image }} style={styles.clubImage} contentFit="cover" />
+                                <View style={styles.clubInfo}>
+                                    <ThemedText type="defaultSemiBold">{item.name}</ThemedText>
+                                    <ThemedText style={{ color: secondaryTextColor, fontSize: 12 }}>{item.category}</ThemedText>
+                                </View>
+                                <TouchableOpacity
+                                    style={[styles.unhideButton, { backgroundColor: tintColor }]}
+                                    onPress={() => unhideClub(item.id)}
+                                >
+                                    <ThemedText style={styles.unhideButtonText}>Unhide</ThemedText>
+                                </TouchableOpacity>
                             </View>
-                            <TouchableOpacity
-                                style={[styles.unhideButton, { backgroundColor: tintColor }]}
-                                onPress={() => unhideClub(item.id)}
-                            >
-                                <ThemedText style={styles.unhideButtonText}>Unhide</ThemedText>
-                            </TouchableOpacity>
-                        </View>
+                        </Pressable>
                     )}
                 />
             )}
