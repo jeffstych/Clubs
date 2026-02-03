@@ -10,6 +10,7 @@ import { ThemeProvider as AppThemeProvider } from '@/context/ThemeContext';
 import { EventProvider } from '@/context/EventContext';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { FollowProvider } from '@/context/FollowContext';
+import { HiddenClubsProvider } from '@/context/HiddenClubsContext';
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
@@ -65,7 +66,9 @@ export default function RootLayout() {
       <AppThemeProvider>
         <EventProvider>
           <FollowProvider>
-            <RootLayoutNav />
+            <HiddenClubsProvider>
+              <RootLayoutNav />
+            </HiddenClubsProvider>
           </FollowProvider>
         </EventProvider>
       </AppThemeProvider>

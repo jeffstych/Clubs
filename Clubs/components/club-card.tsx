@@ -12,16 +12,18 @@ import { useState, useEffect } from 'react';
 
 interface ClubCardProps {
     club: Club;
-    onFollowChange?: () => void; // Callback when follow status changes
+    onFollowChange?: () => void;
+    onNotInterested?: (clubId: string) => void;
 }
 
-export function ClubCard({ club, onFollowChange }: ClubCardProps) {
+export function ClubCard({ club, onFollowChange, onNotInterested }: ClubCardProps) {
     const { session } = useAuth();
     const [isFollowing, setIsFollowing] = useState(false);
     const [followLoading, setFollowLoading] = useState(false);
     const [soonestEvent, setSoonestEvent] = useState<any>(null);
     const [isSignedUp, setIsSignedUp] = useState(false);
     const [eventLoading, setEventLoading] = useState(false);
+    const [showMenu, setShowMenu] = useState(false);
 
     // Check if user is following this club and load event data on mount
     useEffect(() => {
@@ -78,6 +80,9 @@ export function ClubCard({ club, onFollowChange }: ClubCardProps) {
     const followBtnBg = useThemeColor({ light: '#3c823c', dark: '#fff' }, 'tint');
     const followBtnText = useThemeColor({ light: '#fff', dark: '#062406' }, 'background');
     const checkmarkColor = useThemeColor({ light: '#fff', dark: '#062406' }, 'background');
+    const menuBg = useThemeColor({ light: '#fff', dark: '#2c2c2e' }, 'background');
+    const menuBorder = useThemeColor({ light: 'rgba(0,0,0,0.1)', dark: 'rgba(255,255,255,0.1)' }, 'icon');
+    const menuTextColor = useThemeColor({ light: '#ff3b30', dark: '#ff453a' }, 'text'); // Red for negative action
 
     const handleFollowPress = async (e: any) => {
         e.stopPropagation();
@@ -144,13 +149,42 @@ export function ClubCard({ club, onFollowChange }: ClubCardProps) {
         }
     };
 
+    const handleNotInterested = (e: any) => {
+        e.stopPropagation();
+        e.preventDefault();
+        setShowMenu(false);
+        onNotInterested?.(club.id);
+    };
+
     return (
         <Pressable
             onPress={() => router.push(`/clubs/${club.id}` as any)}
             style={({ pressed }) => ({ opacity: pressed ? 0.95 : 1 })}
         >
             <ThemedView style={{ ...styles.card, backgroundColor: cardBackgroundColor, borderColor: cardBorderColor }}>
-                <Image source={{ uri: club.image }} style={styles.image} contentFit="cover" transition={1000} />
+                <View style={styles.imageContainer}>
+                    <Image source={{ uri: club.image }} style={styles.image} contentFit="cover" transition={1000} />
+                    <TouchableOpacity
+                        style={styles.menuIconContainer}
+                        onPress={(e) => {
+                            e.stopPropagation();
+                            setShowMenu(!showMenu);
+                        }}
+                    >
+                        <IconSymbol name="ellipsis" size={20} color="#fff" />
+                    </TouchableOpacity>
+
+                    {showMenu && (
+                        <View style={[styles.dropdown, { backgroundColor: menuBg, borderColor: menuBorder }]}>
+                            <TouchableOpacity
+                                style={styles.dropdownItem}
+                                onPress={handleNotInterested}
+                            >
+                                <ThemedText style={{ ...styles.dropdownText, color: menuTextColor }}>Not interested</ThemedText>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                </View>
                 <View style={styles.content}>
                     <View style={styles.header}>
                         <ThemedText type="subtitle" style={styles.clubName}>{club.name}</ThemedText>
@@ -245,7 +279,47 @@ const styles = StyleSheet.create({
     },
     image: {
         width: '100%',
+        height: '100%',
+    },
+    imageContainer: {
+        width: '100%',
         height: 150,
+        position: 'relative',
+    },
+    menuIconContainer: {
+        position: 'absolute',
+        top: 12,
+        right: 12,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        borderRadius: 15,
+        width: 30,
+        height: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 10,
+    },
+    dropdown: {
+        position: 'absolute',
+        top: 45,
+        right: 12,
+        borderRadius: 8,
+        borderWidth: 1,
+        padding: 4,
+        minWidth: 140,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 5,
+        zIndex: 100,
+    },
+    dropdownItem: {
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+    },
+    dropdownText: {
+        fontSize: 14,
+        fontWeight: '500',
     },
     content: {
         padding: 16,
